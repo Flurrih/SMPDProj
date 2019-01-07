@@ -133,17 +133,16 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 			std::vector<int> tmpComb;
 			std::map<std::string, std::map<int, double>> classAverages;
 
-
+			for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
+				objectCount[database.getObjects()[i].getClassName()] ++;
 
 			//Stworz liste resdnich dla A i B
 			for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
 			{
-
-				objectCount[database.getObjects()[i].getClassName()] ++;
 				for (int xx = 0; xx < database.getNoFeatures(); xx++)
 				{
-					float val = database.getObjects()[i].getFeatures()[xx] / dimension;
-					classAverages[database.getObjects()[i].getClassName()][i] += val;
+					float val = database.getObjects()[i].getFeatures()[xx] / objectCount[database.getObjects()[i].getClassName()];
+					classAverages[database.getObjects()[i].getClassName()][xx] += val;
 				}
 			}
 
@@ -196,7 +195,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 						}
 						else if (database.getObjects()[j].getClassName() == classNames[1])
 						{
-							Xa(i, countB) = database.getObjects()[j].getFeatures()[tmpComb[i]];
+							Xb(i, countB) = database.getObjects()[j].getFeatures()[tmpComb[i]];
 							countB++;
 						}
 					}
@@ -206,21 +205,32 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				boost::numeric::ublas::matrix<double> Sb(dimension, dimension);
 				//boost::numeric::ublas::prod(macierzQuercus, boost::numeric::ublas::trans(macierzQuercus));
 
-				//boost::numeric::ublas::matrix<double> Xa_Ua(dimension, objectCount[classNames[0]]);
-				//boost::numeric::ublas::matrix<double> Xb_Ub(dimension, objectCount[classNames[1]]);
+				boost::numeric::ublas::matrix<double> Xa_Ua(dimension, objectCount[classNames[0]]);
+				boost::numeric::ublas::matrix<double> Xb_Ub(dimension, objectCount[classNames[1]]);
 
-				//Xa_Ua = Xa - Ua;
-				//Xb_Ub = Xb - Ub;
-/*
+				Xa_Ua = Xa - Ua;
+				Xb_Ub = Xb - Ub;
+
 				boost::numeric::ublas::matrix<double> Xa_UaTrans(objectCount[classNames[0]], dimension);
-				boost::numeric::ublas::matrix<double> Xb_UbTrans(dimension, objectCount[classNames[1]]);*/
-				//UaTrans = boost::numeric::ublas::trans(Ua);
-				//UbTrans = boost::numeric::ublas::trans(Ub);(1/ objectCount[classNames[0]])
+				boost::numeric::ublas::matrix<double> Xb_UbTrans(dimension, objectCount[classNames[1]]);
+				Xa_UaTrans = boost::numeric::ublas::trans(Xa_Ua);
+				Xb_UbTrans = boost::numeric::ublas::trans(Xb_Ub);
 
-				Sa = (1 / objectCount[classNames[0]]) * boost::numeric::ublas::prod(Xa - Ua, boost::numeric::ublas::trans(Xa - Ua));
-				Sb = (1 / objectCount[classNames[1]]) * boost::numeric::ublas::prod(Xb - Ub, boost::numeric::ublas::trans(Xb - Ub));
+				//Sa = (1 / objectCount[classNames[0]]) * boost::numeric::ublas::prod(Xa - Ua, boost::numeric::ublas::trans(Xa - Ua), Sa, true);
+				//Sb = (1 / objectCount[classNames[1]]) * boost::numeric::ublas::prod(Xb - Ub, boost::numeric::ublas::trans(Xb - Ub));
+
+
+
+				boost::numeric::ublas::axpy_prod(Xa_Ua, Xa_UaTrans, Sa, true);
+				boost::numeric::ublas::axpy_prod(Xb_Ub, Xb_UbTrans, Sb, true);
+				double tmp1, tmp2;
+				tmp1 = ((double)1.0 / objectCount[classNames[0]]);
+				tmp2 = ((double)1.0 / objectCount[classNames[1]]);
+				Sa = tmp1 * Sa;
+				Sb = tmp2 * Sb;
 				//det
-				boost::numeric::ublas::matrix< double > sumSaSb = Sa + Sb;
+				boost::numeric::ublas::matrix< double > sumSaSb(dimension, dimension);
+				sumSaSb = Sa + Sb;
 				//odleglosc Ua - Ub
 
 				//F
