@@ -84,7 +84,7 @@ void MainWindow::on_FSpushButtonOpenFile_clicked()
 
 void printMatrix(boost::numeric::ublas::matrix<long double> m, int x, int y, std::string name)
 {
-	std::ofstream outputFile("output/"+name + ".txt");
+	std::ofstream outputFile("output/" + name + ".txt");
 	for (int i = 0; i < x; i++)
 	{
 		for (int j = 0; j < y; j++)
@@ -95,6 +95,7 @@ void printMatrix(boost::numeric::ublas::matrix<long double> m, int x, int y, std
 	}
 	outputFile.close();
 }
+
 
 void MainWindow::on_FSpushButtonCompute_clicked()
 {
@@ -185,7 +186,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				Ub = SMPDHelper->GenerateAvarageMatrixForFeatures
 				(tmpComb, classAverages[classNames[1]], objectCount[classNames[1]], dimension);
 
-				
+
 
 				//Znajdz Xa i Xb
 				boost::numeric::ublas::matrix<long double> Xa(dimension, objectCount[classNames[0]]);
@@ -217,7 +218,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 						}
 					}
 				}
-				
+
 				//Sa i Sb
 				boost::numeric::ublas::matrix<long double> Sa(dimension, dimension);
 				boost::numeric::ublas::matrix<long double> Sb(dimension, dimension);
@@ -231,14 +232,14 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				Xa_Ua = Xa - Ua;
 				Xb_Ub = Xb - Ub;
 
-				
+
 
 				boost::numeric::ublas::matrix<long double> Xa_UaTrans(objectCount[classNames[0]], dimension);
 				boost::numeric::ublas::matrix<long double> Xb_UbTrans(objectCount[classNames[1]], dimension);
 				Xa_UaTrans = boost::numeric::ublas::trans(Xa_Ua);
 				Xb_UbTrans = boost::numeric::ublas::trans(Xb_Ub);
 
-				
+
 
 				//Sa = (1 / objectCount[classNames[0]]) * boost::numeric::ublas::prod(Xa - Ua, boost::numeric::ublas::trans(Xa - Ua), Sa, true);
 				//Sb = (1 / objectCount[classNames[1]]) * boost::numeric::ublas::prod(Xb - Ub, boost::numeric::ublas::trans(Xb - Ub));
@@ -249,8 +250,11 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				Xa_UaXa_UaTrans = boost::numeric::ublas::prod(Xa_Ua, Xa_UaTrans);
 				Xb_UbXb_UbTrans = boost::numeric::ublas::prod(Xb_Ub, Xb_UbTrans);
 
-				Sa = Xa_UaXa_UaTrans / objectCount[classNames[0]];
-				Sb = Xb_UbXb_UbTrans / objectCount[classNames[1]];
+				long double t1 = (long double)objectCount[classNames[0]];
+				long double t2 = (long double)objectCount[classNames[1]];
+
+				Sa = Xa_UaXa_UaTrans * ((long double)1.0 / t1);
+				Sb = Xb_UbXb_UbTrans * ((long double)1.0 / t2);
 
 				//det
 				boost::numeric::ublas::matrix< long double > sumSaSb(dimension, dimension);
@@ -259,9 +263,9 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 				//F
 				long double x1 = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]]);
-				long double x2 = determinant<long double>(Sa) + determinant<long double>(Sb);//determinant<long double>(sumSaSb);
+				long double x2 = determinant<long double>(sumSaSb);//determinant<long double>(sumSaSb);
 
-					tmpFLD = x1 / x2;
+				tmpFLD = x1 / x2;
 
 				if (tmpFLD > FLD)
 				{
@@ -290,6 +294,10 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				ui->FStextBrowserDatabaseInfo->append(QString::number(bestCombination[i]));
 			}
 		}
+	}
+	else if (ui->FSradioButtonSFS->isChecked())
+	{
+
 	}
 }
 

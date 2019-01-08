@@ -21,5 +21,7 @@ public:
 
 	long double CalculateUa_UbAvaragesLength
 	(std::vector<int> featureComb, std::map<int, long double> avaragesA, std::map<int, long double> avaragesB);
+
+	boost::numeric::ublas::matrix<long double> DivideMatrix(boost::numeric::ublas::matrix<long double> matrix, int div, int s1, int s2);
 };
 

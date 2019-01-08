@@ -93,3 +93,17 @@ long double SMPHelper::CalculateUa_UbAvaragesLength(std::vector<int> featureComb
 	}
 	return sqrt(substractionUa_Ub);
 }
+
+boost::numeric::ublas::matrix<long double> SMPHelper::DivideMatrix(boost::numeric::ublas::matrix<long double> matrix, int div, int s1, int s2)
+{
+	boost::numeric::ublas::matrix<long double> tmp(s1, s2);
+	for (int i = 0; i < s1; i++)
+	{
+		for (int j = 0; j < s2; j++)
+		{
+			tmp(i, j) = matrix(i, j) / div;
+		}
+	}
+
+	return tmp;
+}
