@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <SMPHelper.h>
 #include "matrixutil.hpp"
+#include <boost/numeric/ublas/io.hpp>
 
 typedef boost::numeric::ublas::matrix<long double> doubleMatrix;
 namespace bnu = boost::numeric::ublas;
@@ -79,6 +80,20 @@ void MainWindow::on_FSpushButtonOpenFile_clicked()
 
 	FSupdateButtonState();
 	updateDatabaseInfo();
+}
+
+void printMatrix(boost::numeric::ublas::matrix<long double> m, int x, int y, std::string name)
+{
+	std::ofstream outputFile("output/"+name + ".txt");
+	for (int i = 0; i < x; i++)
+	{
+		for (int j = 0; j < y; j++)
+		{
+			outputFile << m(i, j) << "	";
+		}
+		outputFile << std::endl;
+	}
+	outputFile.close();
 }
 
 void MainWindow::on_FSpushButtonCompute_clicked()
@@ -170,6 +185,8 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				Ub = SMPDHelper->GenerateAvarageMatrixForFeatures
 				(tmpComb, classAverages[classNames[1]], objectCount[classNames[1]], dimension);
 
+				
+
 				//Znajdz Xa i Xb
 				boost::numeric::ublas::matrix<long double> Xa(dimension, objectCount[classNames[0]]);
 				boost::numeric::ublas::matrix<long double> Xb(dimension, objectCount[classNames[1]]);/*
@@ -200,34 +217,41 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 						}
 					}
 				}
+				
 				//Sa i Sb
 				boost::numeric::ublas::matrix<long double> Sa(dimension, dimension);
 				boost::numeric::ublas::matrix<long double> Sb(dimension, dimension);
 				//boost::numeric::ublas::prod(macierzQuercus, boost::numeric::ublas::trans(macierzQuercus));
 
+
 				boost::numeric::ublas::matrix<long double> Xa_Ua(dimension, objectCount[classNames[0]]);
 				boost::numeric::ublas::matrix<long double> Xb_Ub(dimension, objectCount[classNames[1]]);
+
 
 				Xa_Ua = Xa - Ua;
 				Xb_Ub = Xb - Ub;
 
+				
+
 				boost::numeric::ublas::matrix<long double> Xa_UaTrans(objectCount[classNames[0]], dimension);
-				boost::numeric::ublas::matrix<long double> Xb_UbTrans(objectCount[classNames[0]], dimension);
+				boost::numeric::ublas::matrix<long double> Xb_UbTrans(objectCount[classNames[1]], dimension);
 				Xa_UaTrans = boost::numeric::ublas::trans(Xa_Ua);
 				Xb_UbTrans = boost::numeric::ublas::trans(Xb_Ub);
+
+				
 
 				//Sa = (1 / objectCount[classNames[0]]) * boost::numeric::ublas::prod(Xa - Ua, boost::numeric::ublas::trans(Xa - Ua), Sa, true);
 				//Sb = (1 / objectCount[classNames[1]]) * boost::numeric::ublas::prod(Xb - Ub, boost::numeric::ublas::trans(Xb - Ub));
 
+				boost::numeric::ublas::matrix<long double> Xa_UaXa_UaTrans(dimension, dimension);
+				boost::numeric::ublas::matrix<long double> Xb_UbXb_UbTrans(dimension, dimension);
 
+				Xa_UaXa_UaTrans = boost::numeric::ublas::prod(Xa_Ua, Xa_UaTrans);
+				Xb_UbXb_UbTrans = boost::numeric::ublas::prod(Xb_Ub, Xb_UbTrans);
 
-				boost::numeric::ublas::axpy_prod(Xa_Ua, Xa_UaTrans, Sa, true);
-				boost::numeric::ublas::axpy_prod(Xb_Ub, Xb_UbTrans, Sb, true);
-				long double tmp1, tmp2;
-				tmp1 = ((long double)1.0 / objectCount[classNames[0]]);
-				tmp2 = ((long double)1.0 / objectCount[classNames[1]]);
-				Sa = tmp1 * Sa;
-				Sb = tmp2 * Sb;
+				Sa = Xa_UaXa_UaTrans / objectCount[classNames[0]];
+				Sb = Xb_UbXb_UbTrans / objectCount[classNames[1]];
+
 				//det
 				boost::numeric::ublas::matrix< long double > sumSaSb(dimension, dimension);
 				sumSaSb = Sa + Sb;
@@ -243,8 +267,20 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				{
 					FLD = tmpFLD;
 					bestCombination = tmpComb;
-				}
 
+					printMatrix(Sa, dimension, dimension, "Sa");
+					printMatrix(Sb, dimension, dimension, "Sb");
+					printMatrix(Xa_UaTrans, objectCount[classNames[0]], dimension, "Xa_UaTrans");
+					printMatrix(Xb_UbTrans, objectCount[classNames[1]], dimension, "Xb_UbTrans");
+					printMatrix(Xa_Ua, dimension, objectCount[classNames[0]], "Xa_Ua");
+					printMatrix(Xb_Ub, dimension, objectCount[classNames[1]], "Xb_Ub");
+					printMatrix(Ua, dimension, objectCount[classNames[0]], "Ua");
+					printMatrix(Ub, dimension, objectCount[classNames[1]], "Ub");
+					printMatrix(Xa, dimension, objectCount[classNames[0]], "Xa");
+					printMatrix(Xb, dimension, objectCount[classNames[1]], "Xb");
+					printMatrix(Xa_UaXa_UaTrans, dimension, dimension, "Xa_UaXa_UaTrans");
+					printMatrix(Xb_UbXb_UbTrans, dimension, dimension, "Xb_UbXb_UbTrans");
+				}
 
 			} while (std::prev_permutation(bitmask.begin(), bitmask.end()));
 
