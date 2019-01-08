@@ -11,10 +11,10 @@
 #include <SMPHelper.h>
 #include "matrixutil.hpp"
 
-typedef boost::numeric::ublas::matrix<double> doubleMatrix;
+typedef boost::numeric::ublas::matrix<long double> doubleMatrix;
 namespace bnu = boost::numeric::ublas;
 
-float determinant2x2(bnu::matrix<double> mat)
+float determinant2x2(bnu::matrix<long double> mat)
 {
 	float x = 0;
 	x = mat(0, 0) * mat(1, 1) - mat(1, 0) * mat(0, 1);
@@ -91,14 +91,14 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 	{
 		if (dimension == 1 && database.getNoClass() == 2)
 		{
-			float FLD = 0, tmp;
+			long double FLD = 0, tmp;
 			int max_ind = -1;
 
 			//std::map<std::string, int> classNames = database.getClassNames();
 			for (uint i = 0; i < database.getNoFeatures(); ++i)
 			{
-				std::map<std::string, float> classAverages;
-				std::map<std::string, float> classStds;
+				std::map<std::string, long double> classAverages;
+				std::map<std::string, long double> classStds;
 
 				for (auto const &ob : database.getObjects())
 				{
@@ -123,15 +123,15 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 			}
 
-			ui->FStextBrowserDatabaseInfo->append("max_ind: " + QString::number(max_ind) + " " + QString::number(FLD));
+			ui->FStextBrowserDatabaseInfo->append("max_ind: " + QString::number(max_ind) + " " + QString::number((double)FLD));
 		}
 		else if (dimension > 1 && database.getNoClass() == 2)
 		{
-			float FLD = 0, tmpFLD;
+			long double FLD = 0, tmpFLD;
 			int max_ind = -1;
 			std::vector<int> bestCombination;
 			std::vector<int> tmpComb;
-			std::map<std::string, std::map<int, double>> classAverages;
+			std::map<std::string, std::map<int, long double>> classAverages;
 
 			for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
 				objectCount[database.getObjects()[i].getClassName()] ++;
@@ -141,7 +141,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 			{
 				for (int xx = 0; xx < database.getNoFeatures(); xx++)
 				{
-					float val = database.getObjects()[i].getFeatures()[xx] / objectCount[database.getObjects()[i].getClassName()];
+					long double val = database.getObjects()[i].getFeatures()[xx] / objectCount[database.getObjects()[i].getClassName()];
 					classAverages[database.getObjects()[i].getClassName()][xx] += val;
 				}
 			}
@@ -162,8 +162,8 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				///// Obliczenie fishera
 
 				//Wygeneruj macierz srednich dla A i B do obliczen
-				boost::numeric::ublas::matrix<double> Ua(dimension, objectCount[classNames[0]]);
-				boost::numeric::ublas::matrix<double> Ub(dimension, objectCount[classNames[1]]);
+				boost::numeric::ublas::matrix<long double> Ua(dimension, objectCount[classNames[0]]);
+				boost::numeric::ublas::matrix<long double> Ub(dimension, objectCount[classNames[1]]);
 
 				Ua = SMPDHelper->GenerateAvarageMatrixForFeatures
 				(tmpComb, classAverages[classNames[0]], objectCount[classNames[0]], dimension);
@@ -171,8 +171,8 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				(tmpComb, classAverages[classNames[1]], objectCount[classNames[1]], dimension);
 
 				//Znajdz Xa i Xb
-				boost::numeric::ublas::matrix<double> Xa(dimension, objectCount[classNames[0]]);
-				boost::numeric::ublas::matrix<double> Xb(dimension, objectCount[classNames[1]]);/*
+				boost::numeric::ublas::matrix<long double> Xa(dimension, objectCount[classNames[0]]);
+				boost::numeric::ublas::matrix<long double> Xb(dimension, objectCount[classNames[1]]);/*
 				Xa = SMPDHelper->GenerateXMatrixForFeatures
 								(tmpComb, database, objectCount[classNames[0]], dimension, classNames[0]);
 				Xb = SMPDHelper->GenerateXMatrixForFeatures
@@ -201,18 +201,18 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 					}
 				}
 				//Sa i Sb
-				boost::numeric::ublas::matrix<double> Sa(dimension, dimension);
-				boost::numeric::ublas::matrix<double> Sb(dimension, dimension);
+				boost::numeric::ublas::matrix<long double> Sa(dimension, dimension);
+				boost::numeric::ublas::matrix<long double> Sb(dimension, dimension);
 				//boost::numeric::ublas::prod(macierzQuercus, boost::numeric::ublas::trans(macierzQuercus));
 
-				boost::numeric::ublas::matrix<double> Xa_Ua(dimension, objectCount[classNames[0]]);
-				boost::numeric::ublas::matrix<double> Xb_Ub(dimension, objectCount[classNames[1]]);
+				boost::numeric::ublas::matrix<long double> Xa_Ua(dimension, objectCount[classNames[0]]);
+				boost::numeric::ublas::matrix<long double> Xb_Ub(dimension, objectCount[classNames[1]]);
 
 				Xa_Ua = Xa - Ua;
 				Xb_Ub = Xb - Ub;
 
-				boost::numeric::ublas::matrix<double> Xa_UaTrans(objectCount[classNames[0]], dimension);
-				boost::numeric::ublas::matrix<double> Xb_UbTrans(dimension, objectCount[classNames[1]]);
+				boost::numeric::ublas::matrix<long double> Xa_UaTrans(objectCount[classNames[0]], dimension);
+				boost::numeric::ublas::matrix<long double> Xb_UbTrans(objectCount[classNames[0]], dimension);
 				Xa_UaTrans = boost::numeric::ublas::trans(Xa_Ua);
 				Xb_UbTrans = boost::numeric::ublas::trans(Xb_Ub);
 
@@ -223,20 +223,21 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 				boost::numeric::ublas::axpy_prod(Xa_Ua, Xa_UaTrans, Sa, true);
 				boost::numeric::ublas::axpy_prod(Xb_Ub, Xb_UbTrans, Sb, true);
-				double tmp1, tmp2;
-				tmp1 = ((double)1.0 / objectCount[classNames[0]]);
-				tmp2 = ((double)1.0 / objectCount[classNames[1]]);
+				long double tmp1, tmp2;
+				tmp1 = ((long double)1.0 / objectCount[classNames[0]]);
+				tmp2 = ((long double)1.0 / objectCount[classNames[1]]);
 				Sa = tmp1 * Sa;
 				Sb = tmp2 * Sb;
 				//det
-				boost::numeric::ublas::matrix< double > sumSaSb(dimension, dimension);
+				boost::numeric::ublas::matrix< long double > sumSaSb(dimension, dimension);
 				sumSaSb = Sa + Sb;
 				//odleglosc Ua - Ub
 
 				//F
+				long double x1 = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]]);
+				long double x2 = determinant<long double>(Sa) + determinant<long double>(Sb);//determinant<long double>(sumSaSb);
 
-				tmpFLD = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]])
-					/ determinant<double>(sumSaSb);
+					tmpFLD = x1 / x2;
 
 				if (tmpFLD > FLD)
 				{
@@ -247,7 +248,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 			} while (std::prev_permutation(bitmask.begin(), bitmask.end()));
 
-			ui->FStextBrowserDatabaseInfo->append("FLD: " + QString::number(FLD));
+			ui->FStextBrowserDatabaseInfo->append("FLD: " + QString::number((double)FLD));
 			for (int i = 0; i < dimension; i++)
 			{
 				ui->FStextBrowserDatabaseInfo->append(QString::number(bestCombination[i]));

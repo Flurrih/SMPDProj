@@ -1,0 +1,9 @@
+4, 0, 1, 2, 3
+Acer Campestre,2,10,60,1.3
+Acer Campestre,2,11,45,4.5
+Acer Campestre,1.5,23,78,2.3
+Acer Campestre,1.7,15,100,6
+Quercus x Turneri,6,10,31,2.3
+Quercus x Turneri,7,11,23,3.5
+Quercus x Turneri,6,23,25,1.3
+Quercus x Turneri,4,15,30,5

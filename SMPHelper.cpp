@@ -13,10 +13,10 @@ SMPHelper::~SMPHelper()
 {
 }
 
-boost::numeric::ublas::matrix<double> SMPHelper::GenerateAvarageMatrixForFeatures
-(std::vector<int> featureComb, std::map<int, double> avarages, int objCount, int dimension)
+boost::numeric::ublas::matrix<long double> SMPHelper::GenerateAvarageMatrixForFeatures
+(std::vector<int> featureComb, std::map<int, long double> avarages, int objCount, int dimension)
 {
-	boost::numeric::ublas::matrix<double> U(dimension, objCount);
+	boost::numeric::ublas::matrix<long double> U(dimension, objCount);
 
 	for (int i = 0; i < dimension; i++)
 	{
@@ -31,10 +31,10 @@ boost::numeric::ublas::matrix<double> SMPHelper::GenerateAvarageMatrixForFeature
 
 void SMPHelper::GenerateXMatrixForFeatures
 (std::vector<int> featureComb, Database database, std::map<std::string, int> objectCount, std::vector<std::string> classNames,
-	boost::numeric::ublas::matrix<double>& MatrixXa, boost::numeric::ublas::matrix<double>& MatrixXb)
+	boost::numeric::ublas::matrix<long double>& MatrixXa, boost::numeric::ublas::matrix<long double>& MatrixXb)
 {
-	//boost::numeric::ublas::matrix<double> Xa(featureComb.size(), objectCount[classNames[0]]);
-	//boost::numeric::ublas::matrix<double> Xb(featureComb.size(), objectCount[classNames[1]]);
+	//boost::numeric::ublas::matrix<long double> Xa(featureComb.size(), objectCount[classNames[0]]);
+	//boost::numeric::ublas::matrix<long double> Xb(featureComb.size(), objectCount[classNames[1]]);
 	//int countA = 0;
 	//int countB = 0;
 	//for (int i = 0; i < featureComb.size(); i++)
@@ -58,11 +58,11 @@ void SMPHelper::GenerateXMatrixForFeatures
 	//MatrixXb = Xb;
 }
 
-//boost::numeric::ublas::matrix<double> SMPHelper::GenerateXMatrixForFeatures
+//boost::numeric::ublas::matrix<long double> SMPHelper::GenerateXMatrixForFeatures
 //			(std::vector<int> featureComb, Database database, int objCount, int dimension, std::string className)
 //{
 //	//Zmienic metode dla 2 klas jednoczesnie
-//	boost::numeric::ublas::matrix<double> X(dimension, objCount);
+//	boost::numeric::ublas::matrix<long double> X(dimension, objCount);
 //	int counter = 0;
 //	for (int i = 0; i < dimension; i++)
 //	{
@@ -84,9 +84,9 @@ void SMPHelper::GenerateXMatrixForFeatures
 //	return X;
 //}
 
-double SMPHelper::CalculateUa_UbAvaragesLength(std::vector<int> featureComb, std::map<int, double> avaragesA, std::map<int, double> avaragesB)
+long double SMPHelper::CalculateUa_UbAvaragesLength(std::vector<int> featureComb, std::map<int, long double> avaragesA, std::map<int, long double> avaragesB)
 {
-	double substractionUa_Ub = 0;
+	long double substractionUa_Ub = 0;
 	for each (int combElement in featureComb)
 	{
 		substractionUa_Ub += (avaragesA[combElement] - avaragesB[combElement])*(avaragesA[combElement] - avaragesB[combElement]);
