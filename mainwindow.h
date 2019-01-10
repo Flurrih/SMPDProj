@@ -55,7 +55,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-	std::map<std::string, int> objectCount;
 
 	SMPHelper* SMPDHelper;
 

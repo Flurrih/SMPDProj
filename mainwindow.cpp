@@ -114,6 +114,8 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 	SMPDHelper = new SMPHelper();
 	int currentFeature = 0;
 
+	std::map<std::string, int> objectCount;
+
 	if (ui->FSradioButtonFisher->isChecked())
 	{
 		if (dimension == 1 && database.getNoClass() == 2)
