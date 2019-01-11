@@ -11,6 +11,7 @@
 #include <SMPHelper.h>
 #include "matrixutil.hpp"
 #include <boost/numeric/ublas/io.hpp>
+#include "Classifiers.h"
 
 typedef boost::numeric::ublas::matrix<long double> doubleMatrix;
 namespace bnu = boost::numeric::ublas;
@@ -26,6 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
+	QString nnString = "NN";
+
 	ui->setupUi(this);
 	FSupdateButtonState();
 }
@@ -44,6 +47,8 @@ void MainWindow::updateDatabaseInfo()
 	ui->FStextBrowserDatabaseInfo->setText("noClass: " + QString::number(database.getNoClass()));
 	ui->FStextBrowserDatabaseInfo->append("noObjects: " + QString::number(database.getNoObjects()));
 	ui->FStextBrowserDatabaseInfo->append("noFeatures: " + QString::number(database.getNoFeatures()));
+
+	ui->CcomboBoxClassifiers->addItems({ QString::QString("NN") , QString::QString("NM")});
 
 }
 
@@ -508,7 +513,16 @@ void MainWindow::on_PpushButtonSelectFolder_clicked()
 
 void MainWindow::on_CpushButtonOpenFile_clicked()
 {
+	QString fileName = QFileDialog::getOpenFileName(this,
+		tr("Open TextFile"), "", tr("Texts Files (*.txt)"));
 
+	if (!database.load(fileName.toStdString()))
+		QMessageBox::warning(this, "Warning", "File corrupted !!!");
+	else
+		QMessageBox::information(this, fileName, "File loaded !!!");
+
+	FSupdateButtonState();
+	updateDatabaseInfo();
 }
 
 void MainWindow::on_CpushButtonSaveFile_clicked()
@@ -523,5 +537,11 @@ void MainWindow::on_CpushButtonTrain_clicked()
 
 void MainWindow::on_CpushButtonExecute_clicked()
 {
-
+	Classifiers c(this);
+	c.NMClasiffier();
+	ui->CtextBrowser->append("APass" + QString::number(c.APass));
+	ui->CtextBrowser->append("AFail" + QString::number(c.AFail));
+	ui->CtextBrowser->append("BPass" + QString::number(c.BPass));
+	ui->CtextBrowser->append("BFail" + QString::number(c.BFail));
+	ui->CtextBrowser->append("Draw" + QString::number(c.Draw));
 }

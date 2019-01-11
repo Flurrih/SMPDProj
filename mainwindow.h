@@ -53,13 +53,13 @@ private slots:
 
     void on_CpushButtonExecute_clicked();
 
-private:
+	public:
     Ui::MainWindow *ui;
 
 	SMPHelper* SMPDHelper;
-
+	Database database;
 private:
-     Database database;
+     
 };
 
 #endif // MAINWINDOW_H
