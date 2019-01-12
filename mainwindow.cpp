@@ -216,13 +216,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 				//Znajdz Xa i Xb
 				boost::numeric::ublas::matrix<long double> Xa(dimension, objectCount[classNames[0]]);
-				boost::numeric::ublas::matrix<long double> Xb(dimension, objectCount[classNames[1]]);/*
-				Xa = SMPDHelper->GenerateXMatrixForFeatures
-								(tmpComb, database, objectCount[classNames[0]], dimension, classNames[0]);
-				Xb = SMPDHelper->GenerateXMatrixForFeatures
-								(tmpComb, database, objectCount[classNames[1]], dimension, classNames[1]);*/
-
-								//SMPDHelper->GenerateXMatrixForFeatures(tmpComb, database, objectCount, classNames, &Xa, &Xb);
+				boost::numeric::ublas::matrix<long double> Xb(dimension, objectCount[classNames[1]]);
 
 				int countA = 0;
 				int countB = 0;
@@ -248,27 +242,17 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				//Sa i Sb
 				boost::numeric::ublas::matrix<long double> Sa(dimension, dimension);
 				boost::numeric::ublas::matrix<long double> Sb(dimension, dimension);
-				//boost::numeric::ublas::prod(macierzQuercus, boost::numeric::ublas::trans(macierzQuercus));
-
 
 				boost::numeric::ublas::matrix<long double> Xa_Ua(dimension, objectCount[classNames[0]]);
 				boost::numeric::ublas::matrix<long double> Xb_Ub(dimension, objectCount[classNames[1]]);
 
-
 				Xa_Ua = Xa - Ua;
 				Xb_Ub = Xb - Ub;
-
-
 
 				boost::numeric::ublas::matrix<long double> Xa_UaTrans(objectCount[classNames[0]], dimension);
 				boost::numeric::ublas::matrix<long double> Xb_UbTrans(objectCount[classNames[1]], dimension);
 				Xa_UaTrans = boost::numeric::ublas::trans(Xa_Ua);
 				Xb_UbTrans = boost::numeric::ublas::trans(Xb_Ub);
-
-
-
-				//Sa = (1 / objectCount[classNames[0]]) * boost::numeric::ublas::prod(Xa - Ua, boost::numeric::ublas::trans(Xa - Ua), Sa, true);
-				//Sb = (1 / objectCount[classNames[1]]) * boost::numeric::ublas::prod(Xb - Ub, boost::numeric::ublas::trans(Xb - Ub));
 
 				boost::numeric::ublas::matrix<long double> Xa_UaXa_UaTrans(dimension, dimension);
 				boost::numeric::ublas::matrix<long double> Xb_UbXb_UbTrans(dimension, dimension);
@@ -289,7 +273,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				printMatrix(sumSaSb, dimension, dimension, "sumSa");
 				//F
 				long double x1 = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]]);
-				long double x2 = determinant<long double>(sumSaSb);// + determinant<long double>(Sb);//determinant<long double>(sumSaSb);
+				long double x2 = determinant<long double>(sumSaSb);
 
 				tmpFLD = x1 / x2;
 
@@ -401,13 +385,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 				//Znajdz Xa i Xb
 				boost::numeric::ublas::matrix<long double> Xa(currentDimenstion + 1, objectCount[classNames[0]]);
-				boost::numeric::ublas::matrix<long double> Xb(currentDimenstion + 1, objectCount[classNames[1]]);/*
-				Xa = SMPDHelper->GenerateXMatrixForFeatures
-								(tmpComb, database, objectCount[classNames[0]], dimension, classNames[0]);
-				Xb = SMPDHelper->GenerateXMatrixForFeatures
-								(tmpComb, database, objectCount[classNames[1]], dimension, classNames[1]);*/
-
-								//SMPDHelper->GenerateXMatrixForFeatures(tmpComb, database, objectCount, classNames, &Xa, &Xb);
+				boost::numeric::ublas::matrix<long double> Xb(currentDimenstion + 1, objectCount[classNames[1]]);
 
 				int countA = 0;
 				int countB = 0;
@@ -433,7 +411,6 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				//Sa i Sb
 				boost::numeric::ublas::matrix<long double> Sa(currentDimenstion + 1, currentDimenstion + 1);
 				boost::numeric::ublas::matrix<long double> Sb(currentDimenstion + 1, currentDimenstion + 1);
-				//boost::numeric::ublas::prod(macierzQuercus, boost::numeric::ublas::trans(macierzQuercus));
 
 
 				boost::numeric::ublas::matrix<long double> Xa_Ua(currentDimenstion + 1, objectCount[classNames[0]]);
@@ -449,11 +426,6 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				boost::numeric::ublas::matrix<long double> Xa_UaTrans(objectCount[classNames[0]], currentDimenstion + 1);
 				Xa_UaTrans = boost::numeric::ublas::trans(Xa_Ua);
 				Xb_UbTrans = boost::numeric::ublas::trans(Xb_Ub);
-
-
-
-				//Sa = (1 / objectCount[classNames[0]]) * boost::numeric::ublas::prod(Xa - Ua, boost::numeric::ublas::trans(Xa - Ua), Sa, true);
-				//Sb = (1 / objectCount[classNames[1]]) * boost::numeric::ublas::prod(Xb - Ub, boost::numeric::ublas::trans(Xb - Ub));
 
 				boost::numeric::ublas::matrix<long double> Xa_UaXa_UaTrans(currentDimenstion + 1, currentDimenstion + 1);
 				boost::numeric::ublas::matrix<long double> Xb_UbXb_UbTrans(currentDimenstion + 1, currentDimenstion + 1);
@@ -474,7 +446,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 				//F
 				long double x1 = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]]);
-				long double x2 = determinant<long double>(sumSaSb);//determinant<long double>(sumSaSb);
+				long double x2 = determinant<long double>(sumSaSb);
 
 				tmpFLD = x1 / x2;
 
