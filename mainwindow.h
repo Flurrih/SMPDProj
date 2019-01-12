@@ -53,14 +53,13 @@ private slots:
 
     void on_CpushButtonExecute_clicked();
 
-private:
+	public:
     Ui::MainWindow *ui;
-	std::map<std::string, int> objectCount;
 
 	SMPHelper* SMPDHelper;
-
+	Database database;
 private:
-     Database database;
+     
 };
 
 #endif // MAINWINDOW_H

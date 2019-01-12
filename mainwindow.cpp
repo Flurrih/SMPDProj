@@ -11,6 +11,7 @@
 #include <SMPHelper.h>
 #include "matrixutil.hpp"
 #include <boost/numeric/ublas/io.hpp>
+#include "Classifiers.h"
 
 typedef boost::numeric::ublas::matrix<long double> doubleMatrix;
 namespace bnu = boost::numeric::ublas;
@@ -33,6 +34,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
+	QString nnString = "NN";
+
 	ui->setupUi(this);
 	FSupdateButtonState();
 }
@@ -51,6 +54,8 @@ void MainWindow::updateDatabaseInfo()
 	ui->FStextBrowserDatabaseInfo->setText("noClass: " + QString::number(database.getNoClass()));
 	ui->FStextBrowserDatabaseInfo->append("noObjects: " + QString::number(database.getNoObjects()));
 	ui->FStextBrowserDatabaseInfo->append("noFeatures: " + QString::number(database.getNoFeatures()));
+
+	ui->CcomboBoxClassifiers->addItems({ QString::QString("NN") , QString::QString("NM") });
 
 }
 
@@ -104,12 +109,25 @@ void printMatrix(boost::numeric::ublas::matrix<long double> m, int x, int y, std
 }
 
 
+bool containsValue(std::vector<int> vec, int val)
+{
+	for each (int var in vec)
+	{
+		if (var == val)
+			return true;
+	}
+	return false;
+}
+
 void MainWindow::on_FSpushButtonCompute_clicked()
 {
 	int dimension = ui->FScomboBox->currentText().toInt();
 	std::vector<std::string> classNames = database.getClassNames();
-	
+
 	SMPDHelper = new SMPHelper();
+	int currentFeature = 0;
+
+	std::map<std::string, int> objectCount;
 
 	if (ui->FSradioButtonFisher->isChecked())
 	{
@@ -268,10 +286,10 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				boost::numeric::ublas::matrix< long double > sumSaSb(dimension, dimension);
 				sumSaSb = Sa + Sb;
 				//odleglosc Ua - Ub
-
+				printMatrix(sumSaSb, dimension, dimension, "sumSa");
 				//F
 				long double x1 = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]]);
-				long double x2 = determinant<long double>(sumSaSb);//determinant<long double>(sumSaSb);
+				long double x2 = determinant<long double>(sumSaSb);// + determinant<long double>(Sb);//determinant<long double>(sumSaSb);
 
 				tmpFLD = x1 / x2;
 
@@ -279,6 +297,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				{
 					FLD = tmpFLD;
 					bestCombination = tmpComb;
+
 
 					printMatrix(Sa, dimension, dimension, "Sa");
 					printMatrix(Sb, dimension, dimension, "Sb");
@@ -308,6 +327,184 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 	else if (ui->FSradioButtonSFS->isChecked())
 	{
 
+		// C1
+		std::vector<int> sfsCombination, bestSfs;
+		long double FLD = 0, tmpFLD, maxFLD = 0;
+		int max_ind = -1;
+		std::vector<int> tmpComb;
+		std::map<std::string, std::map<int, long double>> classAverages;
+
+		//std::map<std::string, int> classNames = database.getClassNames();
+		for (uint i = 0; i < database.getNoFeatures(); ++i)
+		{
+			std::map<std::string, long double> classAverages1;
+			std::map<std::string, long double> classStds;
+
+			for (auto const &ob : database.getObjects())
+			{
+				classAverages1[ob.getClassName()] += ob.getFeatures()[i];
+				classStds[ob.getClassName()] += ob.getFeatures()[i] * ob.getFeatures()[i];
+			}
+
+			std::for_each(database.getClassCounters().begin(), database.getClassCounters().end(), [&](const std::pair<std::string, int> &it)
+			{
+				classAverages1[it.first] /= it.second;
+				classStds[it.first] = std::sqrt(classStds[it.first] / it.second - classAverages1[it.first] * classAverages1[it.first]);
+			}
+			);
+
+			tmpFLD = std::abs(classAverages1[database.getClassNames()[0]] - classAverages1[database.getClassNames()[1]]) / (classStds[database.getClassNames()[0]] + classStds[database.getClassNames()[1]]);
+
+			if (tmpFLD > FLD)
+			{
+				FLD = tmpFLD;
+				max_ind = i;
+			}
+		}
+		FLD = 0;
+		bestSfs.push_back(max_ind);
+
+		for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
+			objectCount[database.getObjects()[i].getClassName()] ++;
+
+		//Stworz liste resdnich dla A i B
+		for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
+		{
+			for (int xx = 0; xx < database.getNoFeatures(); xx++)
+			{
+				long double val = database.getObjects()[i].getFeatures()[xx] / objectCount[database.getObjects()[i].getClassName()];
+				classAverages[database.getObjects()[i].getClassName()][xx] += val;
+			}
+		}
+
+		for (int currentDimenstion = 1; currentDimenstion < dimension; currentDimenstion++)
+		{
+			for (int c = 0; c < database.getNoFeatures(); c++)
+			{
+				tmpComb = bestSfs;
+				if (!containsValue(tmpComb, c))
+					tmpComb.push_back(c);
+				else
+					continue;
+				///// Obliczenie fishera
+
+				//Wygeneruj macierz srednich dla A i B do obliczen
+				boost::numeric::ublas::matrix<long double> Ua(currentDimenstion + 1, objectCount[classNames[0]]);
+				boost::numeric::ublas::matrix<long double> Ub(currentDimenstion + 1, objectCount[classNames[1]]);
+
+				Ua = SMPDHelper->GenerateAvarageMatrixForFeatures
+				(tmpComb, classAverages[classNames[0]], objectCount[classNames[0]], currentDimenstion + 1);
+				Ub = SMPDHelper->GenerateAvarageMatrixForFeatures
+				(tmpComb, classAverages[classNames[1]], objectCount[classNames[1]], currentDimenstion + 1);
+
+
+
+				//Znajdz Xa i Xb
+				boost::numeric::ublas::matrix<long double> Xa(currentDimenstion + 1, objectCount[classNames[0]]);
+				boost::numeric::ublas::matrix<long double> Xb(currentDimenstion + 1, objectCount[classNames[1]]);/*
+				Xa = SMPDHelper->GenerateXMatrixForFeatures
+								(tmpComb, database, objectCount[classNames[0]], dimension, classNames[0]);
+				Xb = SMPDHelper->GenerateXMatrixForFeatures
+								(tmpComb, database, objectCount[classNames[1]], dimension, classNames[1]);*/
+
+								//SMPDHelper->GenerateXMatrixForFeatures(tmpComb, database, objectCount, classNames, &Xa, &Xb);
+
+				int countA = 0;
+				int countB = 0;
+				for (int i = 0; i < tmpComb.size(); i++)
+				{
+					countA = 0;
+					countB = 0;
+					for (int j = 0; j < database.getObjects().size(); j++)
+					{
+						if (database.getObjects()[j].getClassName() == classNames[0])
+						{
+							Xa(i, countA) = database.getObjects()[j].getFeatures()[tmpComb[i]];
+							countA++;
+						}
+						else if (database.getObjects()[j].getClassName() == classNames[1])
+						{
+							Xb(i, countB) = database.getObjects()[j].getFeatures()[tmpComb[i]];
+							countB++;
+						}
+					}
+				}
+
+				//Sa i Sb
+				boost::numeric::ublas::matrix<long double> Sa(currentDimenstion + 1, currentDimenstion + 1);
+				boost::numeric::ublas::matrix<long double> Sb(currentDimenstion + 1, currentDimenstion + 1);
+				//boost::numeric::ublas::prod(macierzQuercus, boost::numeric::ublas::trans(macierzQuercus));
+
+
+				boost::numeric::ublas::matrix<long double> Xa_Ua(currentDimenstion + 1, objectCount[classNames[0]]);
+				boost::numeric::ublas::matrix<long double> Xb_Ub(currentDimenstion + 1, objectCount[classNames[1]]);
+
+
+				Xa_Ua = Xa - Ua;
+				Xb_Ub = Xb - Ub;
+
+
+
+				boost::numeric::ublas::matrix<long double> Xb_UbTrans(objectCount[classNames[1]], currentDimenstion + 1);
+				boost::numeric::ublas::matrix<long double> Xa_UaTrans(objectCount[classNames[0]], currentDimenstion + 1);
+				Xa_UaTrans = boost::numeric::ublas::trans(Xa_Ua);
+				Xb_UbTrans = boost::numeric::ublas::trans(Xb_Ub);
+
+
+
+				//Sa = (1 / objectCount[classNames[0]]) * boost::numeric::ublas::prod(Xa - Ua, boost::numeric::ublas::trans(Xa - Ua), Sa, true);
+				//Sb = (1 / objectCount[classNames[1]]) * boost::numeric::ublas::prod(Xb - Ub, boost::numeric::ublas::trans(Xb - Ub));
+
+				boost::numeric::ublas::matrix<long double> Xa_UaXa_UaTrans(currentDimenstion + 1, currentDimenstion + 1);
+				boost::numeric::ublas::matrix<long double> Xb_UbXb_UbTrans(currentDimenstion + 1, currentDimenstion + 1);
+
+				Xa_UaXa_UaTrans = boost::numeric::ublas::prod(Xa_Ua, Xa_UaTrans);
+				Xb_UbXb_UbTrans = boost::numeric::ublas::prod(Xb_Ub, Xb_UbTrans);
+
+				long double t1 = (long double)objectCount[classNames[0]];
+				long double t2 = (long double)objectCount[classNames[1]];
+
+				Sa = Xa_UaXa_UaTrans * ((long double)1.0 / t1);
+				Sb = Xb_UbXb_UbTrans * ((long double)1.0 / t2);
+
+				//det
+				boost::numeric::ublas::matrix< long double > sumSaSb(currentDimenstion + 1, currentDimenstion + 1);
+				sumSaSb = Sa + Sb;
+				//odleglosc Ua - Ub
+
+				//F
+				long double x1 = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]]);
+				long double x2 = determinant<long double>(sumSaSb);//determinant<long double>(sumSaSb);
+
+				tmpFLD = x1 / x2;
+
+				if (tmpFLD > FLD)
+				{
+					FLD = tmpFLD;
+					sfsCombination = tmpComb;
+					maxFLD = FLD;
+					//printMatrix(Sa, currentDimenstion, currentDimenstion, "Sa");
+					//printMatrix(Sb, currentDimenstion, currentDimenstion, "Sb");
+					//printMatrix(Xa_UaTrans, objectCount[classNames[0]], currentDimenstion, "Xa_UaTrans");
+					//printMatrix(Xb_UbTrans, objectCount[classNames[1]], currentDimenstion, "Xb_UbTrans");
+					//printMatrix(Xa_Ua, currentDimenstion, objectCount[classNames[0]], "Xa_Ua");
+					//printMatrix(Xb_Ub, currentDimenstion, objectCount[classNames[1]], "Xb_Ub");
+					//printMatrix(Ua, currentDimenstion, objectCount[classNames[0]], "Ua");
+					//printMatrix(Ub, currentDimenstion, objectCount[classNames[1]], "Ub");
+					//printMatrix(Xa, currentDimenstion, objectCount[classNames[0]], "Xa");
+					//printMatrix(Xb, currentDimenstion, objectCount[classNames[1]], "Xb");
+					//printMatrix(Xa_UaXa_UaTrans, currentDimenstion, currentDimenstion, "Xa_UaXa_UaTrans");
+					//printMatrix(Xb_UbXb_UbTrans, currentDimenstion, currentDimenstion, "Xb_UbXb_UbTrans");
+				}
+			}
+			bestSfs = sfsCombination;
+			FLD = 0;
+		}
+		ui->FStextBrowserDatabaseInfo->append("FLD: " + QString::number((double)maxFLD));
+		for (int i = 0; i < bestSfs.size(); i++)
+		{
+			ui->FStextBrowserDatabaseInfo->append(QString::number(bestSfs[i]));
+		}
 	}
 }
 
@@ -350,7 +547,7 @@ void MainWindow::on_CpushButtonSaveFile_clicked()
 void MainWindow::on_CpushButtonTrain_clicked()
 
 {
-
+	std::map<std::string, int> objectCount;
 	std::vector<std::string> classNames = database.getClassNames();
 	int procentDoBazyTrening = ui->CplainTextEditTrainingPart->toPlainText().toInt();
 	testowa.clear();
@@ -364,7 +561,7 @@ void MainWindow::on_CpushButtonTrain_clicked()
 	int t1 = (int)objectCount[classNames[0]];
 	int t2 = (int)objectCount[classNames[1]];
 	int a = 0;
-	iloscAcerTraning = t1 *procentDoBazyTrening/100;
+	iloscAcerTraning = t1 * procentDoBazyTrening / 100;
 	iloscQuercusTraning = t2 * procentDoBazyTrening / 100;
 	iloscKombinacji = database.getNoObjects();
 	for (int j = 0; j < database.getNoObjects(); j++) {
@@ -373,12 +570,12 @@ void MainWindow::on_CpushButtonTrain_clicked()
 			if (j < iloscAcerTraning) {
 				treningowa.addObject(database.getObjects().at(j));
 			}
-			
+
 			else {
 				testowa.addObject(database.getObjects()[j]);
 			}
 		}
-		else if (database.getObjects().at(j).getClassName().compare("Quercus") == 0){
+		else if (database.getObjects().at(j).getClassName().compare("Quercus") == 0) {
 
 			if (j < (iloscQuercusTraning + t1)) {
 				treningowa.addObject(database.getObjects().at(j));
@@ -386,9 +583,9 @@ void MainWindow::on_CpushButtonTrain_clicked()
 			else {
 				testowa.addObject(database.getObjects()[j]);
 			}
-			
+
 		}
-		
+
 	}
 
 
@@ -396,7 +593,6 @@ void MainWindow::on_CpushButtonTrain_clicked()
 
 void MainWindow::on_CpushButtonExecute_clicked()
 {
-
 	int liczbaAcer = 0;
 	int lTrafienAcer = 0;
 	float procentTrafienAcer = 0;
@@ -414,9 +610,11 @@ void MainWindow::on_CpushButtonExecute_clicked()
 	{
 		ui->CtextBrowser->append("-------------------");
 		ui->CtextBrowser->append("Klasyfikator NN");
-		
+
 		for (int i = 0; i < testowa.getNoObjects(); i++) {
+			najmniejszaOdleglosc = 99999;
 			for (int j = 0; j < treningowa.getNoObjects(); j++) {
+				odleglosc = 0;
 
 				for (int k = 0; k < testowa.getNoFeatures(); k++) {
 					odleglosc += pow(treningowa.getObjects()[j].getFeatures()[k] - testowa.getObjects()[i].getFeatures()[k], 2);
@@ -437,17 +635,17 @@ void MainWindow::on_CpushButtonExecute_clicked()
 					lTrafienAcer++;
 				}
 			}
-			else if (testowa.getObjects().at(i).getClassName().compare("Quercus") == 0){
+			else if (testowa.getObjects().at(i).getClassName().compare("Quercus") == 0) {
 				liczbaQuercus++;
 				if (treningowa.getObjects().at(idNajblizszegoSasiada).getClassName().compare("Quercus") == 0) {
 					lTrafienQuercus++;
 				}
 			}
-		
-		
-		
-		
-		
+
+
+
+
+
 		}
 
 		if (liczbaAcer != 0)
@@ -473,10 +671,16 @@ void MainWindow::on_CpushButtonExecute_clicked()
 		//sumaProcentTrafien += procentTrafien;
 	}
 
-	
+
 
 	if (ui->CcomboBoxClassifiers->currentText() == "NM") {
-
+		Classifiers c(this);
+		c.NMClasiffier();
+		ui->CtextBrowser->append("APass" + QString::number(c.APass));
+		ui->CtextBrowser->append("AFail" + QString::number(c.AFail));
+		ui->CtextBrowser->append("BPass" + QString::number(c.BPass));
+		ui->CtextBrowser->append("BFail" + QString::number(c.BFail));
+		ui->CtextBrowser->append("Draw" + QString::number(c.Draw));
 	}
 
 	if (ui->CcomboBoxClassifiers->currentText() == "K-NM") {
@@ -495,5 +699,4 @@ void MainWindow::on_CpushButtonExecute_clicked()
 	else {
 		procentTrafienQuercus = 0;
 	}
-
 }
