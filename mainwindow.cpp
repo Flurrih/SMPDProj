@@ -606,6 +606,8 @@ void MainWindow::on_CpushButtonExecute_clicked()
 	double najmniejszaOdleglosc = 99999;
 	int idNajblizszegoSasiada = -1;
 
+
+
 	if (ui->CcomboBoxClassifiers->currentText() == "NN")
 	{
 		ui->CtextBrowser->append("-------------------");
