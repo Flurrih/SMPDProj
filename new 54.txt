@@ -1,0 +1,64 @@
+void MainWindow::on_CpushButtonOpenFile_clicked()
+{
+	QString fileName = QFileDialog::getOpenFileName(this,
+		tr("Open TextFile"), "", tr("Texts Files (*.txt)"));
+
+	if (!database.load(fileName.toStdString()))
+		QMessageBox::warning(this, "Warning", "File corrupted !!!");
+	else
+		QMessageBox::information(this, fileName, "File loaded !!!");
+
+	FSupdateButtonState();
+	updateDatabaseInfo();
+}
+
+void MainWindow::on_CpushButtonSaveFile_clicked()
+{
+	QString fileName = QFileDialog::getSaveFileName(this,
+		tr("Open TextFile"), "D:\\Users\\Krzysiu\\Documents\\Visual Studio 2015\\Projects\\SMPD\\SMPD\\Debug\\", tr("Texts Files (*.txt)"));
+
+	QMessageBox::information(this, "My File", fileName);
+	database.save(fileName.toStdString());
+}
+
+void MainWindow::on_CpushButtonTrain_clicked()
+
+{
+
+	std::vector<std::string> classNames = database.getClassNames();
+	int procentDoBazyTrening = ui->CplainTextEditTrainingPart->toPlainText().toInt();
+	testowa.clear();
+	treningowa.clear();
+	for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
+		objectCount[database.getObjects()[i].getClassName()] ++;
+
+	long double t1 = (long double)objectCount[classNames[0]];
+	long double t2 = (long double)objectCount[classNames[1]];
+	int a = 0;
+	int iloscAcerTraning = t1 *procentDoBazyTrening/100;
+	int iloscQuercusTraning = t2 * procentDoBazyTrening / 100;
+	for (int j = 0; j < database.getNoObjects(); j++) {
+
+		if (database.getObjects().at(j).getClassName().compare("Acer") == 0) {
+			if (j < iloscAcerTraning) {
+				treningowa.addObject(database.getObjects().at(j));
+			}
+			else {
+				testowa.addObject(database.getObjects()[j]);
+			}
+		}
+		else if (database.getObjects().at(j).getClassName().compare("Quercus") == 0){
+
+			if (j < iloscQuercusTraning) {
+				treningowa.addObject(database.getObjects().at(j));
+			}
+			else {
+				testowa.addObject(database.getObjects()[j]);
+			}
+			
+		}
+		
+	}
+
+
+}

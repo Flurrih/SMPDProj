@@ -14,6 +14,13 @@
 
 typedef boost::numeric::ublas::matrix<long double> doubleMatrix;
 namespace bnu = boost::numeric::ublas;
+Database treningowa;
+Database testowa;
+float sumaProcentTrafien = 0;
+std::vector<int> bestCombination;
+std::vector<int> cechyDoKlasyf;
+
+
 
 float determinant2x2(bnu::matrix<long double> mat)
 {
@@ -101,6 +108,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 {
 	int dimension = ui->FScomboBox->currentText().toInt();
 	std::vector<std::string> classNames = database.getClassNames();
+	
 	SMPDHelper = new SMPHelper();
 
 	if (ui->FSradioButtonFisher->isChecked())
@@ -145,7 +153,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 		{
 			long double FLD = 0, tmpFLD;
 			int max_ind = -1;
-			std::vector<int> bestCombination;
+
 			std::vector<int> tmpComb;
 			std::map<std::string, std::map<int, long double>> classAverages;
 
@@ -288,6 +296,8 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 			} while (std::prev_permutation(bitmask.begin(), bitmask.end()));
 
+			cechyDoKlasyf = bestCombination;
+
 			ui->FStextBrowserDatabaseInfo->append("FLD: " + QString::number((double)FLD));
 			for (int i = 0; i < dimension; i++)
 			{
@@ -316,20 +326,174 @@ void MainWindow::on_PpushButtonSelectFolder_clicked()
 
 void MainWindow::on_CpushButtonOpenFile_clicked()
 {
+	QString fileName = QFileDialog::getOpenFileName(this,
+		tr("Open TextFile"), "", tr("Texts Files (*.txt)"));
 
+	if (!database.load(fileName.toStdString()))
+		QMessageBox::warning(this, "Warning", "File corrupted !!!");
+	else
+		QMessageBox::information(this, fileName, "File loaded !!!");
+
+	FSupdateButtonState();
+	updateDatabaseInfo();
 }
 
 void MainWindow::on_CpushButtonSaveFile_clicked()
 {
+	QString fileName = QFileDialog::getSaveFileName(this,
+		tr("Open TextFile"), "D:\\Users\\Krzysiu\\Documents\\Visual Studio 2015\\Projects\\SMPD\\SMPD\\Debug\\", tr("Texts Files (*.txt)"));
 
+	QMessageBox::information(this, "My File", fileName);
+	database.save(fileName.toStdString());
 }
 
 void MainWindow::on_CpushButtonTrain_clicked()
+
 {
+
+	std::vector<std::string> classNames = database.getClassNames();
+	int procentDoBazyTrening = ui->CplainTextEditTrainingPart->toPlainText().toInt();
+	testowa.clear();
+	treningowa.clear();
+	int iloscAcerTraning = 0;
+	int iloscQuercusTraning = 0;
+	int iloscKombinacji = 0;
+	for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
+		objectCount[database.getObjects()[i].getClassName()] ++;
+
+	int t1 = (int)objectCount[classNames[0]];
+	int t2 = (int)objectCount[classNames[1]];
+	int a = 0;
+	iloscAcerTraning = t1 *procentDoBazyTrening/100;
+	iloscQuercusTraning = t2 * procentDoBazyTrening / 100;
+	iloscKombinacji = database.getNoObjects();
+	for (int j = 0; j < database.getNoObjects(); j++) {
+
+		if (database.getObjects().at(j).getClassName().compare("Acer") == 0) {
+			if (j < iloscAcerTraning) {
+				treningowa.addObject(database.getObjects().at(j));
+			}
+			
+			else {
+				testowa.addObject(database.getObjects()[j]);
+			}
+		}
+		else if (database.getObjects().at(j).getClassName().compare("Quercus") == 0){
+
+			if (j < (iloscQuercusTraning + t1)) {
+				treningowa.addObject(database.getObjects().at(j));
+			}
+			else {
+				testowa.addObject(database.getObjects()[j]);
+			}
+			
+		}
+		
+	}
+
 
 }
 
 void MainWindow::on_CpushButtonExecute_clicked()
 {
+
+	int liczbaAcer = 0;
+	int lTrafienAcer = 0;
+	float procentTrafienAcer = 0;
+
+	int liczbaQuercus = 0;
+	int lTrafienQuercus = 0;
+	float procentTrafienQuercus = 0;
+
+	float procentTrafien = 0;
+	double odleglosc = 0;
+	double najmniejszaOdleglosc = 99999;
+	int idNajblizszegoSasiada = -1;
+
+	if (ui->CcomboBoxClassifiers->currentText() == "NN")
+	{
+		ui->CtextBrowser->append("-------------------");
+		ui->CtextBrowser->append("Klasyfikator NN");
+		
+		for (int i = 0; i < testowa.getNoObjects(); i++) {
+			for (int j = 0; j < treningowa.getNoObjects(); j++) {
+
+				for (int k = 0; k < testowa.getNoFeatures(); k++) {
+					odleglosc += pow(treningowa.getObjects()[j].getFeatures()[k] - testowa.getObjects()[i].getFeatures()[k], 2);
+				}
+
+				odleglosc = sqrt(odleglosc);
+
+				if (odleglosc < najmniejszaOdleglosc) {
+
+					najmniejszaOdleglosc = odleglosc;
+					idNajblizszegoSasiada = j;
+				}
+			}
+
+			if (testowa.getObjects().at(i).getClassName().compare("Acer") == 0) {
+				liczbaAcer++;
+				if (treningowa.getObjects().at(idNajblizszegoSasiada).getClassName().compare("Acer") == 0) {
+					lTrafienAcer++;
+				}
+			}
+			else if (testowa.getObjects().at(i).getClassName().compare("Quercus") == 0){
+				liczbaQuercus++;
+				if (treningowa.getObjects().at(idNajblizszegoSasiada).getClassName().compare("Quercus") == 0) {
+					lTrafienQuercus++;
+				}
+			}
+		
+		
+		
+		
+		
+		}
+
+		if (liczbaAcer != 0)
+		{
+			procentTrafienAcer = (lTrafienAcer * 100 / liczbaAcer);
+		}
+		else {
+			procentTrafienAcer = 0;
+		}
+		if (liczbaQuercus != 0) {
+			procentTrafienQuercus = (lTrafienQuercus * 100 / liczbaQuercus);
+		}
+		else {
+			procentTrafienQuercus = 0;
+		}
+
+		procentTrafien = ((lTrafienAcer + lTrafienQuercus) * 100) / (liczbaAcer + liczbaQuercus);
+		ui->CtextBrowser->append("liczba Acer:" + QString::number(liczbaAcer) + "   liczba trafien dla Acer:" + QString::number(lTrafienAcer));
+		ui->CtextBrowser->append("liczba Quercus:" + QString::number(liczbaQuercus) + "   liczba trafien dla Quercus:" + QString::number(lTrafienQuercus));
+		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(procentTrafienAcer) + "%");
+		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(procentTrafienQuercus) + "%");
+		ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(procentTrafien) + "%");
+		//sumaProcentTrafien += procentTrafien;
+	}
+
+	
+
+	if (ui->CcomboBoxClassifiers->currentText() == "NM") {
+
+	}
+
+	if (ui->CcomboBoxClassifiers->currentText() == "K-NM") {
+
+	}
+	if (liczbaAcer != 0)
+	{
+		procentTrafienAcer = (lTrafienAcer * 100 / liczbaAcer);
+	}
+	else {
+		procentTrafienAcer = 0;
+	}
+	if (liczbaQuercus != 0) {
+		procentTrafienQuercus = (lTrafienQuercus * 100 / liczbaQuercus);
+	}
+	else {
+		procentTrafienQuercus = 0;
+	}
 
 }
