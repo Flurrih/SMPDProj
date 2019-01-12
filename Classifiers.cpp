@@ -32,7 +32,7 @@ void Classifiers::divideObjectsAsTrainAndTest(std::vector<Object> allObjects, st
 	{
 		if (ob.getClassName() == classNames[0])
 		{
-			if (numberOfTrainA >= 0)
+			if (numberOfTrainA > 0)
 			{
 				trainObjects.push_back(ob);
 				numberOfTrainA--;
@@ -44,7 +44,7 @@ void Classifiers::divideObjectsAsTrainAndTest(std::vector<Object> allObjects, st
 		}
 		else if (ob.getClassName() == classNames[1])
 		{
-			if (numberOfTrainB >= 0)
+			if (numberOfTrainB > 0)
 			{
 				trainObjects.push_back(ob);
 				numberOfTrainB--;
@@ -116,7 +116,7 @@ void Classifiers::NMClasiffier()
 		long double LengthToA = calculateLengthOfMatrix(Ua_X);
 		long double LengthToB = calculateLengthOfMatrix(Ub_X);
 
-		if (LengthToA > LengthToB)
+		if (LengthToA < LengthToB)
 		{//A
 			if (testOb.getClassName() == classNames[0])
 			{
@@ -127,7 +127,7 @@ void Classifiers::NMClasiffier()
 				AFail++;
 			}
 		}
-		else if (LengthToB > LengthToA)
+		else if (LengthToB < LengthToA)
 		{//B
 			if (testOb.getClassName() == classNames[1])
 			{
