@@ -11,15 +11,18 @@
 #include <SMPHelper.h>
 #include "matrixutil.hpp"
 #include <boost/numeric/ublas/io.hpp>
-#include "Classifiers.h"
+#include <ctime>
+#include <cstdlib>
+#include <cstdio>
 
 typedef boost::numeric::ublas::matrix<long double> doubleMatrix;
 namespace bnu = boost::numeric::ublas;
-Database treningowa;
-Database testowa;
+//Database treningowa;
+//Database testowa;
 float sumaProcentTrafien = 0;
 std::vector<int> bestCombination;
 std::vector<int> cechyDoKlasyf;
+
 
 
 
@@ -38,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->setupUi(this);
 	FSupdateButtonState();
+	
 }
 
 MainWindow::~MainWindow()
@@ -54,8 +58,8 @@ void MainWindow::updateDatabaseInfo()
 	ui->FStextBrowserDatabaseInfo->setText("noClass: " + QString::number(database.getNoClass()));
 	ui->FStextBrowserDatabaseInfo->append("noObjects: " + QString::number(database.getNoObjects()));
 	ui->FStextBrowserDatabaseInfo->append("noFeatures: " + QString::number(database.getNoFeatures()));
-
-	ui->CcomboBoxClassifiers->addItems({ QString::QString("NN") , QString::QString("NM") });
+	classifiers = new Classifiers(&database);
+	//ui->CcomboBoxClassifiers->addItems({ QString::QString("NN") , QString::QString("NM") });
 
 }
 
@@ -520,46 +524,53 @@ void MainWindow::on_CpushButtonSaveFile_clicked()
 void MainWindow::on_CpushButtonTrain_clicked()
 
 {
-	std::map<std::string, int> objectCount;
-	std::vector<std::string> classNames = database.getClassNames();
+
+	std::vector<Object> testObjects;
+	std::vector<Object> trainObjects;
 	int procentDoBazyTrening = ui->CplainTextEditTrainingPart->toPlainText().toInt();
-	testowa.clear();
-	treningowa.clear();
-	int iloscAcerTraning = 0;
-	int iloscQuercusTraning = 0;
-	int iloscKombinacji = 0;
-	for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
-		objectCount[database.getObjects()[i].getClassName()] ++;
+	classifiers->divideObjectsAsTrainAndTest(procentDoBazyTrening);
+	
 
-	int t1 = (int)objectCount[classNames[0]];
-	int t2 = (int)objectCount[classNames[1]];
-	int a = 0;
-	iloscAcerTraning = t1 * procentDoBazyTrening / 100;
-	iloscQuercusTraning = t2 * procentDoBazyTrening / 100;
-	iloscKombinacji = database.getNoObjects();
-	for (int j = 0; j < database.getNoObjects(); j++) {
+	//std::map<std::string, int> objectCount;
+	//std::vector<std::string> classNames = database.getClassNames();
+	//int procentDoBazyTrening = ui->CplainTextEditTrainingPart->toPlainText().toInt();
+	//testowa.clear();
+	//treningowa.clear();
+	//int iloscAcerTraning = 0;
+	//int iloscQuercusTraning = 0;
+	//int iloscKombinacji = 0;
+	//for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
+	//	objectCount[database.getObjects()[i].getClassName()] ++;
 
-		if (database.getObjects().at(j).getClassName().compare("Acer") == 0) {
-			if (j < iloscAcerTraning) {
-				treningowa.addObject(database.getObjects().at(j));
-			}
+	//int t1 = (int)objectCount[classNames[0]];
+	//int t2 = (int)objectCount[classNames[1]];
+	//int a = 0;
+	//iloscAcerTraning = t1 * procentDoBazyTrening / 100;
+	//iloscQuercusTraning = t2 * procentDoBazyTrening / 100;
+	//iloscKombinacji = database.getNoObjects();
+	//for (int j = 0; j < database.getNoObjects(); j++) {
 
-			else {
-				testowa.addObject(database.getObjects()[j]);
-			}
-		}
-		else if (database.getObjects().at(j).getClassName().compare("Quercus") == 0) {
+	//	if (database.getObjects().at(j).getClassName().compare("Acer") == 0) {
+	//		if (j < iloscAcerTraning) {
+	//			treningowa.addObject(database.getObjects().at(j));
+	//		}
 
-			if (j < (iloscQuercusTraning + t1)) {
-				treningowa.addObject(database.getObjects().at(j));
-			}
-			else {
-				testowa.addObject(database.getObjects()[j]);
-			}
+	//		else {
+	//			testowa.addObject(database.getObjects()[j]);
+	//		}
+	//	}
+	//	else if (database.getObjects().at(j).getClassName().compare("Quercus") == 0) {
 
-		}
+	//		if (j < (iloscQuercusTraning + t1)) {
+	//			treningowa.addObject(database.getObjects().at(j));
+	//		}
+	//		else {
+	//			testowa.addObject(database.getObjects()[j]);
+	//		}
 
-	}
+	//	}
+
+	//}
 
 
 }
@@ -572,13 +583,13 @@ void MainWindow::on_CpushButtonBoostrap_clicked()
 		int wylosowanaLiczba = 0;
 		std::vector<int> losoweLiczby;
 		bool niePowtarzana = true;
-		testowa.clear();
-		treningowa.clear();
+		classifiers->testObjects.clear();
+		classifiers-> trainObjects.clear();
 
-		for (int j = 0; j < 100; j++)
+		for (int j = 0; j < database.getNoObjects(); j++)
 		{
 			wylosowanaLiczba = (rand() % (int)(database.getNoObjects()));
-			treningowa.addObject(database.getObjects()[wylosowanaLiczba]);
+			classifiers->trainObjects.push_back(database.getObjects()[wylosowanaLiczba]);
 			losoweLiczby.push_back(wylosowanaLiczba);
 		}
 
@@ -593,7 +604,7 @@ void MainWindow::on_CpushButtonBoostrap_clicked()
 				}
 			}
 			if (niePowtarzana) {
-				testowa.addObject(database.getObjects()[k]);
+				classifiers->testObjects.push_back(database.getObjects()[k]);
 			}
 		}
 		on_CpushButtonExecute_clicked();
@@ -625,7 +636,11 @@ void MainWindow::on_CpushButtonExecute_clicked()
 
 	if (ui->CcomboBoxClassifiers->currentText() == "NN")
 	{
+
 		ui->CtextBrowser->append("-------------------");
+		ui->CtextBrowser->append("Klasyfikator NN");
+		classifiers->NNClasiffier(cechyDoKlasyf);
+		/*ui->CtextBrowser->append("-------------------");
 		ui->CtextBrowser->append("Klasyfikator NN");
 
 		for (int i = 0; i < testowa.getNoObjects(); i++) {
@@ -673,13 +688,13 @@ void MainWindow::on_CpushButtonExecute_clicked()
 		}
 		else {
 			procentTrafienQuercus = 0;
-		}
+		}*/
 
-		procentTrafien = ((lTrafienAcer + lTrafienQuercus) * 100) / (liczbaAcer + liczbaQuercus);
-		ui->CtextBrowser->append("liczba Acer:" + QString::number(liczbaAcer) + "   liczba trafien dla Acer:" + QString::number(lTrafienAcer));
-		ui->CtextBrowser->append("liczba Quercus:" + QString::number(liczbaQuercus) + "   liczba trafien dla Quercus:" + QString::number(lTrafienQuercus));
-		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(procentTrafienAcer) + "%");
-		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(procentTrafienQuercus) + "%");
+		procentTrafien = ((classifiers->lTrafienAcer + classifiers->lTrafienQuercus) * 100) / (classifiers->liczbaAcer + classifiers->liczbaQuercus);
+		ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->liczbaAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->lTrafienAcer));
+		ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->liczbaQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->lTrafienQuercus));
+		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->procentTrafienAcer) + "%");
+		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->procentTrafienQuercus) + "%");
 		ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(procentTrafien) + "%");
 		sumaProcentTrafien += procentTrafien;
 	}
@@ -687,13 +702,12 @@ void MainWindow::on_CpushButtonExecute_clicked()
 
 
 	if (ui->CcomboBoxClassifiers->currentText() == "NM") {
-		Classifiers c(this);
-		c.NMClasiffier();
-		ui->CtextBrowser->append("APass" + QString::number(c.APass));
-		ui->CtextBrowser->append("AFail" + QString::number(c.AFail));
-		ui->CtextBrowser->append("BPass" + QString::number(c.BPass));
-		ui->CtextBrowser->append("BFail" + QString::number(c.BFail));
-		ui->CtextBrowser->append("Draw" + QString::number(c.Draw));
+		classifiers->NMClasiffier(cechyDoKlasyf);
+		ui->CtextBrowser->append("APass" + QString::number(classifiers->APass));
+		ui->CtextBrowser->append("AFail" + QString::number(classifiers->AFail));
+		ui->CtextBrowser->append("BPass" + QString::number(classifiers->BPass));
+		ui->CtextBrowser->append("BFail" + QString::number(classifiers->BFail));
+		ui->CtextBrowser->append("Draw" + QString::number(classifiers->Draw));
 	}
 
 	if (ui->CcomboBoxClassifiers->currentText() == "K-NM") {

@@ -8,6 +8,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QMessageBox>
+#include "Classifiers.h"
 
 
 #include"database.h"
@@ -57,6 +58,7 @@ private slots:
 
 	public:
     Ui::MainWindow *ui;
+	Classifiers  *classifiers;
 
 	SMPHelper* SMPDHelper;
 	Database database;
