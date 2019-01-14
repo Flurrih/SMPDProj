@@ -53,6 +53,8 @@ private slots:
 
     void on_CpushButtonExecute_clicked();
 
+	void on_CpushButtonBoostrap_clicked();
+
 	public:
     Ui::MainWindow *ui;
 
