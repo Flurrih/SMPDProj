@@ -164,6 +164,9 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				{
 					FLD = tmp;
 					max_ind = i;
+
+					featuresForClassification.clear();
+					featuresForClassification.push_back(max_ind);
 				}
 
 			}
@@ -346,6 +349,8 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 			{
 				FLD = tmpFLD;
 				max_ind = i;
+				featuresForClassification.clear();
+				featuresForClassification.push_back(max_ind);
 			}
 		}
 		FLD = 0;
@@ -567,7 +572,7 @@ void MainWindow::on_CpushButtonBoostrap_clicked()
 		}
 		on_CpushButtonExecute_clicked();
 	}
-	featuresForClassification.clear();
+	//featuresForClassification.clear();
 	ui->CtextBrowser->append(" ++++++++++++++++++++ ");
 	ui->CtextBrowser->append("Srednia dla Boostrap ");
 	ui->CtextBrowser->append("dla klasyfikatora " + ui->CcomboBoxClassifiers->currentText());
@@ -611,12 +616,13 @@ void MainWindow::on_CpushButtonExecute_clicked()
 
 
 	if (ui->CcomboBoxClassifiers->currentText() == "NM") {
+		ui->CtextBrowser->append("-------------------");
+		ui->CtextBrowser->append("NM");
 		classifiers->NMClasiffier(featuresForClassification);
-		ui->CtextBrowser->append("APass" + QString::number(classifiers->APass));
-		ui->CtextBrowser->append("AFail" + QString::number(classifiers->AFail));
-		ui->CtextBrowser->append("BPass" + QString::number(classifiers->BPass));
-		ui->CtextBrowser->append("BFail" + QString::number(classifiers->BFail));
-		ui->CtextBrowser->append("Draw" + QString::number(classifiers->Draw));
+		ui->CtextBrowser->append("First class:" + QString::number(classifiers->APass / (double)(classifiers->APass + classifiers->AFail) * 100 ) + "%");
+		ui->CtextBrowser->append("Second class:" + QString::number(classifiers->BPass / (double)(classifiers->BPass + classifiers->BFail) * 100) + "%");
+		ui->CtextBrowser->append("Overall:" + QString::number((classifiers->BPass + classifiers->APass)
+			/ ((double)(classifiers->BPass + classifiers->BFail) + (double)(classifiers->APass + classifiers->AFail)) * 100) + "%");
 	}
 
 	if (ui->CcomboBoxClassifiers->currentText() == "K-NM") {

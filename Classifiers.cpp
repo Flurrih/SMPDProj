@@ -13,11 +13,11 @@ Classifiers::~Classifiers()
 {
 }
 
-void fillMatrixWithAvarages(std::map<int, long double> classAvg, boost::numeric::ublas::matrix<long double> &matrix)
+void fillMatrixWithAvarages(std::map<int, long double> classAvg, boost::numeric::ublas::matrix<long double> &matrix, std::vector<int> features)
 {
-	for (int i = 0; i < classAvg.size(); i++)
+	for (int i = 0; i < matrix.size1(); i++)
 	{
-		matrix(i, 0) = classAvg[i];
+		matrix(i, 0) = classAvg[features[i]];
 	}
 }
 
@@ -60,11 +60,11 @@ void Classifiers::divideObjectsAsTrainAndTest(double trainPercent)
 	}
 }
 
-void fillFeatureMatrix(Object obj, boost::numeric::ublas::matrix<long double> &matrix)
+void fillFeatureMatrix(Object obj, boost::numeric::ublas::matrix<long double> &matrix, std::vector<int> features)
 {
-	for (int ft = 0; ft < obj.getFeatures().size(); ft++)
+	for (int ft = 0; ft < matrix.size1(); ft++)
 	{
-		matrix(ft, 0) = obj.getFeatures()[ft];
+		matrix(ft, 0) = obj.getFeatures()[features[ft]];
 	}
 }
 
@@ -152,26 +152,27 @@ void Classifiers::NMClasiffier(std::vector<int> cechyDoKlasyf)
 	
 	for (int i = 0; i < trainObjects.size(); i++)
 	{
-		for (int xx = 0; xx < main->getNoFeatures(); xx++)
+		//for (int xx = 0; xx < main->getNoFeatures(); xx++)
+		for (size_t xx = 0; xx < cechyDoKlasyf.size(); xx++)
 		{
-			long double val = trainObjects[i].getFeatures()[xx] / objectCount[trainObjects[i].getClassName()];
-			classAverages[trainObjects[i].getClassName()][xx] += val;
+			long double val = trainObjects[i].getFeatures()[cechyDoKlasyf[xx]] / objectCount[trainObjects[i].getClassName()];
+			classAverages[trainObjects[i].getClassName()][cechyDoKlasyf[xx]] += val;
 		}
 	}
 
-	boost::numeric::ublas::matrix<long double> AClassAvgMatrix(main->getNoFeatures(), 1);
-	boost::numeric::ublas::matrix<long double> BClassAvgMatrix(main->getNoFeatures(), 1);
-	fillMatrixWithAvarages(classAverages[classNames[0]], AClassAvgMatrix);
-	fillMatrixWithAvarages(classAverages[classNames[1]], BClassAvgMatrix);
+	boost::numeric::ublas::matrix<long double> AClassAvgMatrix(cechyDoKlasyf.size(), 1);
+	boost::numeric::ublas::matrix<long double> BClassAvgMatrix(cechyDoKlasyf.size(), 1);
+	fillMatrixWithAvarages(classAverages[classNames[0]], AClassAvgMatrix, cechyDoKlasyf);
+	fillMatrixWithAvarages(classAverages[classNames[1]], BClassAvgMatrix, cechyDoKlasyf);
 
 
 	for each (Object testOb in testObjects)
 	{
-		boost::numeric::ublas::matrix<long double> featureMatrix(main->getNoFeatures(), 1);
-		fillFeatureMatrix(testOb, featureMatrix);
+		boost::numeric::ublas::matrix<long double> featureMatrix(cechyDoKlasyf.size(), 1);
+		fillFeatureMatrix(testOb, featureMatrix, cechyDoKlasyf);
 
-		boost::numeric::ublas::matrix<long double> Ua_X(main->getNoFeatures(), 1);
-		boost::numeric::ublas::matrix<long double> Ub_X(main->getNoFeatures(), 1);
+		boost::numeric::ublas::matrix<long double> Ua_X(cechyDoKlasyf.size(), 1);
+		boost::numeric::ublas::matrix<long double> Ub_X(cechyDoKlasyf.size(), 1);
 		Ua_X = AClassAvgMatrix - featureMatrix;
 		Ub_X = BClassAvgMatrix - featureMatrix;
 		long double LengthToA = calculateLengthOfMatrix(Ua_X);
