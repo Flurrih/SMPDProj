@@ -80,61 +80,62 @@ long double calculateLengthOfMatrix(boost::numeric::ublas::matrix<long double> m
 }
 void Classifiers::NNClasiffier(std::vector<int> cechyDoKlasyf)
 {
-	int idNajblizszegoSasiada = 0;;
-	liczbaAcer = 0;
-	lTrafienAcer = 0;
-	lTrafienQuercus = 0;
-	liczbaQuercus = 0;
-	procentTrafienAcer = 0;
-	procentTrafienQuercus = 0;
+	int idNearestNeighbor = 0;
+	numberOfAcer = 0;
+	numberOfHitsAcer = 0;
+	numberOfHitsQuercus = 0;
+	numberOfQuercus = 0;
+	percentOfHitsAcer = 0;
+	percentOfHitsQuercus = 0;
+	
 
 
 	for (int i = 0; i < testObjects.size(); i++) {
-		double najmniejszaOdleglosc = 99999;
+		double minDistance = 99999;
 
 		for (int j = 0; j < trainObjects.size(); j++) {
-			double odleglosc = 0;
+			double distance = 0;
 
 			for (int k = 0; k < cechyDoKlasyf.size(); k++) {
-				odleglosc += pow(trainObjects[j].getFeatures()[cechyDoKlasyf[k]] - testObjects[i].getFeatures()[cechyDoKlasyf[k]], 2);
+				distance += pow(trainObjects[j].getFeatures()[cechyDoKlasyf[k]] - testObjects[i].getFeatures()[cechyDoKlasyf[k]], 2);
 			}
 
-			odleglosc = sqrt(odleglosc);
+			distance = sqrt(distance);
 
-			if (odleglosc < najmniejszaOdleglosc) {
+			if (distance < minDistance) {
 
-				najmniejszaOdleglosc = odleglosc;
-				idNajblizszegoSasiada = j;
+				minDistance = distance;
+				idNearestNeighbor = j;
 			}
 		}
 
 		if (testObjects[i].getClassName().compare("Acer") == 0) {
-			liczbaAcer++;
-			if (trainObjects[idNajblizszegoSasiada].getClassName().compare("Acer") == 0) {
-				lTrafienAcer++;
+			numberOfAcer++;
+			if (trainObjects[idNearestNeighbor].getClassName().compare("Acer") == 0) {
+				numberOfHitsAcer++;
 			}
 		}
 		else if (testObjects[i].getClassName().compare("Quercus") == 0) {
-			liczbaQuercus++;
-			if (trainObjects[idNajblizszegoSasiada].getClassName().compare("Quercus") == 0) {
-				lTrafienQuercus++;
+			numberOfQuercus++;
+			if (trainObjects[idNearestNeighbor].getClassName().compare("Quercus") == 0) {
+				numberOfHitsQuercus++;
 
 			}
 		}
 	}
 
-	if (liczbaAcer != 0)
+	if (numberOfAcer != 0)
 	{
-		procentTrafienAcer = (lTrafienAcer * 100 / liczbaAcer);
+		percentOfHitsAcer = (numberOfHitsAcer * 100 / numberOfAcer);
 	}
 	else {
-		procentTrafienAcer = 0;
+		percentOfHitsAcer = 0;
 	}
-	if (liczbaQuercus != 0) {
-		procentTrafienQuercus = (lTrafienQuercus * 100 / liczbaQuercus);
+	if (numberOfQuercus != 0) {
+		percentOfHitsQuercus = (numberOfHitsQuercus * 100 / numberOfQuercus);
 	}
 	else {
-		procentTrafienQuercus = 0;
+		percentOfHitsQuercus = 0;
 	}
 
 }

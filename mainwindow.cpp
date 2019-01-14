@@ -17,11 +17,10 @@
 
 typedef boost::numeric::ublas::matrix<long double> doubleMatrix;
 namespace bnu = boost::numeric::ublas;
-//Database treningowa;
-//Database testowa;
-float sumaProcentTrafien = 0;
+
+float TotalHits = 0;
 std::vector<int> bestCombination;
-std::vector<int> cechyDoKlasyf;
+std::vector<int> featuresForClassification;
 
 
 
@@ -273,7 +272,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				//det
 				boost::numeric::ublas::matrix< long double > sumSaSb(dimension, dimension);
 				sumSaSb = Sa + Sb;
-				//odleglosc Ua - Ub
+				//distance Ua - Ub
 				printMatrix(sumSaSb, dimension, dimension, "sumSa");
 				//F
 				long double x1 = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]]);
@@ -303,7 +302,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
 			} while (std::prev_permutation(bitmask.begin(), bitmask.end()));
 
-			cechyDoKlasyf = bestCombination;
+			featuresForClassification = bestCombination;
 
 			ui->FStextBrowserDatabaseInfo->append("FLD: " + QString::number((double)FLD));
 			for (int i = 0; i < dimension; i++)
@@ -446,7 +445,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				//det
 				boost::numeric::ublas::matrix< long double > sumSaSb(currentDimenstion + 1, currentDimenstion + 1);
 				sumSaSb = Sa + Sb;
-				//odleglosc Ua - Ub
+				//distance Ua - Ub
 
 				//F
 				long double x1 = SMPDHelper->CalculateUa_UbAvaragesLength(tmpComb, classAverages[classNames[0]], classAverages[classNames[1]]);
@@ -474,7 +473,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				}
 			}
 			bestSfs = sfsCombination;
-			cechyDoKlasyf = bestSfs;
+			featuresForClassification = bestSfs;
 			FLD = 0;
 		}
 		ui->FStextBrowserDatabaseInfo->append("FLD: " + QString::number((double)maxFLD));
@@ -527,110 +526,69 @@ void MainWindow::on_CpushButtonTrain_clicked()
 
 	std::vector<Object> testObjects;
 	std::vector<Object> trainObjects;
-	int procentDoBazyTrening = ui->CplainTextEditTrainingPart->toPlainText().toInt();
-	classifiers->divideObjectsAsTrainAndTest(procentDoBazyTrening);
+	int procToTrainingBase = ui->CplainTextEditTrainingPart->toPlainText().toInt();
+	classifiers->divideObjectsAsTrainAndTest(procToTrainingBase);
 	
 
-	//std::map<std::string, int> objectCount;
-	//std::vector<std::string> classNames = database.getClassNames();
-	//int procentDoBazyTrening = ui->CplainTextEditTrainingPart->toPlainText().toInt();
-	//testowa.clear();
-	//treningowa.clear();
-	//int iloscAcerTraning = 0;
-	//int iloscQuercusTraning = 0;
-	//int iloscKombinacji = 0;
-	//for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
-	//	objectCount[database.getObjects()[i].getClassName()] ++;
-
-	//int t1 = (int)objectCount[classNames[0]];
-	//int t2 = (int)objectCount[classNames[1]];
-	//int a = 0;
-	//iloscAcerTraning = t1 * procentDoBazyTrening / 100;
-	//iloscQuercusTraning = t2 * procentDoBazyTrening / 100;
-	//iloscKombinacji = database.getNoObjects();
-	//for (int j = 0; j < database.getNoObjects(); j++) {
-
-	//	if (database.getObjects().at(j).getClassName().compare("Acer") == 0) {
-	//		if (j < iloscAcerTraning) {
-	//			treningowa.addObject(database.getObjects().at(j));
-	//		}
-
-	//		else {
-	//			testowa.addObject(database.getObjects()[j]);
-	//		}
-	//	}
-	//	else if (database.getObjects().at(j).getClassName().compare("Quercus") == 0) {
-
-	//		if (j < (iloscQuercusTraning + t1)) {
-	//			treningowa.addObject(database.getObjects().at(j));
-	//		}
-	//		else {
-	//			testowa.addObject(database.getObjects()[j]);
-	//		}
-
-	//	}
-
-	//}
-
-
+	
 }
 
 void MainWindow::on_CpushButtonBoostrap_clicked()
 {
-	sumaProcentTrafien = 0;
+	TotalHits = 0;
 	for (int i = 0; i < ui->ComboBoxBoostrapK->currentText().toInt(); i++)
 	{
-		int wylosowanaLiczba = 0;
-		std::vector<int> losoweLiczby;
-		bool niePowtarzana = true;
+		int randomNumber = 0;
+		std::vector<int> randomNumbers;
+		bool notRepeated = true;
 		classifiers->testObjects.clear();
 		classifiers-> trainObjects.clear();
 
 		for (int j = 0; j < database.getNoObjects(); j++)
 		{
-			wylosowanaLiczba = (rand() % (int)(database.getNoObjects()));
-			classifiers->trainObjects.push_back(database.getObjects()[wylosowanaLiczba]);
-			losoweLiczby.push_back(wylosowanaLiczba);
+			randomNumber = (rand() % (int)(database.getNoObjects()));
+			classifiers->trainObjects.push_back(database.getObjects()[randomNumber]);
+			randomNumbers.push_back(randomNumber);
 		}
 
 		for (int k = 0; k < database.getNoObjects(); k++)
 		{
-			niePowtarzana = true;
-			for (int j = 0; j < losoweLiczby.size(); j++)
+			notRepeated = true;
+			for (int j = 0; j < randomNumbers.size(); j++)
 			{
-				if (losoweLiczby[j] == k)
+				if (randomNumbers[j] == k)
 				{
-					niePowtarzana = false;
+					notRepeated = false;
 				}
 			}
-			if (niePowtarzana) {
+			if (notRepeated) {
 				classifiers->testObjects.push_back(database.getObjects()[k]);
 			}
 		}
 		on_CpushButtonExecute_clicked();
 	}
-	cechyDoKlasyf.clear();
+	featuresForClassification.clear();
 	ui->CtextBrowser->append(" ++++++++++++++++++++ ");
 	ui->CtextBrowser->append("Srednia dla Boostrap ");
 	ui->CtextBrowser->append("dla klasyfikatora " + ui->CcomboBoxClassifiers->currentText());
-	ui->CtextBrowser->append(QString::number(sumaProcentTrafien / ui->ComboBoxBoostrapK->currentText().toUInt()) + "%");
+	ui->CtextBrowser->append(QString::number(TotalHits / ui->ComboBoxBoostrapK->currentText().toUInt()) + "%");
 
 }
 
 void MainWindow::on_CpushButtonExecute_clicked()
 {
-	int liczbaAcer = 0;
-	int lTrafienAcer = 0;
-	float procentTrafienAcer = 0;
+	int numberOfAcer = 0;
+	int numberOfHitsAcer = 0;
+	float percentOfHitsAcer = 0;
 
-	int liczbaQuercus = 0;
-	int lTrafienQuercus = 0;
-	float procentTrafienQuercus = 0;
+	int numberOfQuercus = 0;
+	int numberOfHitsQuercus = 0;
+	float percentOfHitsQuercus = 0;
 
-	float procentTrafien = 0;
-	double odleglosc = 0;
-	double najmniejszaOdleglosc = 99999;
-	int idNajblizszegoSasiada = -1;
+	float percentOfHits = 0;
+	double distance = 0;
+	double minDistance = 99999;
+	int idNearestNeighbor = -1;
 
 
 
@@ -639,70 +597,21 @@ void MainWindow::on_CpushButtonExecute_clicked()
 
 		ui->CtextBrowser->append("-------------------");
 		ui->CtextBrowser->append("Klasyfikator NN");
-		classifiers->NNClasiffier(cechyDoKlasyf);
-		/*ui->CtextBrowser->append("-------------------");
-		ui->CtextBrowser->append("Klasyfikator NN");
-
-		for (int i = 0; i < testowa.getNoObjects(); i++) {
-			najmniejszaOdleglosc = 99999;
-				
-			for (int j = 0; j < treningowa.getNoObjects(); j++) {
-				odleglosc = 0;
-
-				for (int k = 0; k < cechyDoKlasyf.size(); k++) {
-					odleglosc += pow(treningowa.getObjects()[j].getFeatures()[cechyDoKlasyf[k]] - testowa.getObjects()[i].getFeatures()[cechyDoKlasyf[k]], 2);
-				}
-
-				odleglosc = sqrt(odleglosc);
-
-				if (odleglosc < najmniejszaOdleglosc) {
-
-					najmniejszaOdleglosc = odleglosc;
-					idNajblizszegoSasiada = j;
-				}
-			}
-
-			if (testowa.getObjects()[i].getClassName().compare("Acer") == 0) {
-				liczbaAcer++;
-				if (treningowa.getObjects()[idNajblizszegoSasiada].getClassName().compare("Acer") == 0) {
-					lTrafienAcer++;
-				}
-			}
-			else if (testowa.getObjects()[i].getClassName().compare("Quercus") == 0) {
-				liczbaQuercus++;
-				if (treningowa.getObjects()[idNajblizszegoSasiada].getClassName().compare("Quercus") == 0) {
-					lTrafienQuercus++;
-				}
-			}
-		}
-
-		if (liczbaAcer != 0)
-		{
-			procentTrafienAcer = (lTrafienAcer * 100 / liczbaAcer);
-		}
-		else {
-			procentTrafienAcer = 0;
-		}
-		if (liczbaQuercus != 0) {
-			procentTrafienQuercus = (lTrafienQuercus * 100 / liczbaQuercus);
-		}
-		else {
-			procentTrafienQuercus = 0;
-		}*/
-
-		procentTrafien = ((classifiers->lTrafienAcer + classifiers->lTrafienQuercus) * 100) / (classifiers->liczbaAcer + classifiers->liczbaQuercus);
-		ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->liczbaAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->lTrafienAcer));
-		ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->liczbaQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->lTrafienQuercus));
-		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->procentTrafienAcer) + "%");
-		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->procentTrafienQuercus) + "%");
-		ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(procentTrafien) + "%");
-		sumaProcentTrafien += procentTrafien;
+		classifiers->NNClasiffier(featuresForClassification);
+		
+		percentOfHits = ((classifiers->numberOfHitsAcer + classifiers->numberOfHitsQuercus) * 100) / (classifiers->numberOfAcer + classifiers->numberOfQuercus);
+		ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
+		ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
+		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->percentOfHitsAcer) + "%");
+		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->percentOfHitsQuercus) + "%");
+		ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(percentOfHits) + "%");
+		TotalHits += percentOfHits;
 	}
 
 
 
 	if (ui->CcomboBoxClassifiers->currentText() == "NM") {
-		classifiers->NMClasiffier(cechyDoKlasyf);
+		classifiers->NMClasiffier(featuresForClassification);
 		ui->CtextBrowser->append("APass" + QString::number(classifiers->APass));
 		ui->CtextBrowser->append("AFail" + QString::number(classifiers->AFail));
 		ui->CtextBrowser->append("BPass" + QString::number(classifiers->BPass));
@@ -713,17 +622,17 @@ void MainWindow::on_CpushButtonExecute_clicked()
 	if (ui->CcomboBoxClassifiers->currentText() == "K-NM") {
 
 	}
-	if (liczbaAcer != 0)
+	if (numberOfAcer != 0)
 	{
-		procentTrafienAcer = (lTrafienAcer * 100 / liczbaAcer);
+		percentOfHitsAcer = (numberOfHitsAcer * 100 / numberOfAcer);
 	}
 	else {
-		procentTrafienAcer = 0;
+		percentOfHitsAcer = 0;
 	}
-	if (liczbaQuercus != 0) {
-		procentTrafienQuercus = (lTrafienQuercus * 100 / liczbaQuercus);
+	if (numberOfQuercus != 0) {
+		percentOfHitsQuercus = (numberOfHitsQuercus * 100 / numberOfQuercus);
 	}
 	else {
-		procentTrafienQuercus = 0;
+		percentOfHitsQuercus = 0;
 	}
 }

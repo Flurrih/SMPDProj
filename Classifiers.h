@@ -27,12 +27,14 @@ public:
 	int BFail = 0;
 	int Draw = 0;
 
-	int liczbaAcer = 0;
-	int lTrafienAcer = 0;
-	int lTrafienQuercus = 0;
-	int liczbaQuercus = 0;
-	int procentTrafienAcer = 0;
-	int procentTrafienQuercus = 0;
+	int numberOfAcer = 0;
+	int numberOfHitsAcer = 0;
+	int numberOfHitsQuercus = 0;
+	int numberOfQuercus = 0;
+	float percentOfHitsAcer = 0;
+	float percentOfHitsQuercus = 0;
+
+	
 	
 };
 
