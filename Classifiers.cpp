@@ -252,6 +252,12 @@ void Classifiers::kNNClasiffier(std::vector<int> cechyDoKlasyf, int k)
 
 void Classifiers::NMClasiffier(std::vector<int> cechyDoKlasyf)
 {
+	numberOfAcer = 0;
+	numberOfHitsAcer = 0;
+	numberOfHitsQuercus = 0;
+	numberOfQuercus = 0;
+	percentOfHitsAcer = 0;
+	percentOfHitsQuercus = 0;
 	std::map<std::string, int> objectCount;
 	std::map<std::string, std::map<int, long double>> classAverages;
 	
@@ -289,30 +295,34 @@ void Classifiers::NMClasiffier(std::vector<int> cechyDoKlasyf)
 
 		if (LengthToA < LengthToB)
 		{//A
+			numberOfAcer++;
 			if (testOb.getClassName() == classNames[0])
 			{
-				APass++;
-			}
-			else
-			{
-				AFail++;
+				numberOfHitsAcer++;
 			}
 		}
 		else if (LengthToB < LengthToA)
 		{//B
+			numberOfQuercus++;
 			if (testOb.getClassName() == classNames[1])
 			{
-				BPass++;
+				numberOfHitsQuercus++;
 			}
-			else
-			{
-				BFail++;
-			}
-		}
-		else
-		{//Draw
-			Draw++;
 		}
 
+	}
+
+	if (numberOfAcer != 0)
+	{
+		percentOfHitsAcer = (numberOfHitsAcer * 100 / numberOfAcer);
+	}
+	else {
+		percentOfHitsAcer = 0;
+	}
+	if (numberOfQuercus != 0) {
+		percentOfHitsQuercus = (numberOfHitsQuercus * 100 / numberOfQuercus);
+	}
+	else {
+		percentOfHitsQuercus = 0;
 	}
 }

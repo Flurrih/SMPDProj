@@ -602,15 +602,17 @@ void MainWindow::on_CpushButtonExecute_clicked()
 
 		ui->CtextBrowser->append("-------------------");
 		ui->CtextBrowser->append("Klasyfikator NN");
+
 		classifiers->NNClasiffier(featuresForClassification);
 		
 		percentOfHits = ((classifiers->numberOfHitsAcer + classifiers->numberOfHitsQuercus) * 100) / (classifiers->numberOfAcer + classifiers->numberOfQuercus);
-		ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
-		ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
+		//ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
+		//ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
 		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->percentOfHitsAcer) + "%");
 		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->percentOfHitsQuercus) + "%");
 		ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(percentOfHits) + "%");
 		TotalHits += percentOfHits;
+		ui->CtextBrowser->append("-------------------");
 	}
 
 
@@ -618,20 +620,33 @@ void MainWindow::on_CpushButtonExecute_clicked()
 	if (ui->CcomboBoxClassifiers->currentText() == "NM") {
 		ui->CtextBrowser->append("-------------------");
 		ui->CtextBrowser->append("NM");
-		classifiers->NMClasiffier(featuresForClassification);
-		ui->CtextBrowser->append("First class:" + QString::number(classifiers->APass / (double)(classifiers->APass + classifiers->AFail) * 100 ) + "%");
-		ui->CtextBrowser->append("Second class:" + QString::number(classifiers->BPass / (double)(classifiers->BPass + classifiers->BFail) * 100) + "%");
-		ui->CtextBrowser->append("Overall:" + QString::number((classifiers->BPass + classifiers->APass)
-			/ ((double)(classifiers->BPass + classifiers->BFail) + (double)(classifiers->APass + classifiers->AFail)) * 100) + "%");
-	}
 
-	if (ui->CcomboBoxClassifiers->currentText() == "KNN") {
-		classifiers->kNNClasiffier(featuresForClassification, ui->CcomboBoxK->currentText().toInt());
-		ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
-		ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
+		classifiers->NMClasiffier(featuresForClassification);
+
+		percentOfHits = ((classifiers->numberOfHitsAcer + classifiers->numberOfHitsQuercus) * 100) / (classifiers->numberOfAcer + classifiers->numberOfQuercus);
+		//ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
+		//ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
 		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->percentOfHitsAcer) + "%");
 		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->percentOfHitsQuercus) + "%");
 		ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(percentOfHits) + "%");
+		TotalHits += percentOfHits;
+		ui->CtextBrowser->append("-------------------");
+	}
+
+	if (ui->CcomboBoxClassifiers->currentText() == "KNN") {
+		ui->CtextBrowser->append("-------------------");
+		ui->CtextBrowser->append("Klasyfikator kNN");
+
+		classifiers->kNNClasiffier(featuresForClassification, ui->CcomboBoxK->currentText().toInt());
+
+		percentOfHits = ((classifiers->numberOfHitsAcer + classifiers->numberOfHitsQuercus) * 100) / (classifiers->numberOfAcer + classifiers->numberOfQuercus);
+		//ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
+		//ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
+		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->percentOfHitsAcer) + "%");
+		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->percentOfHitsQuercus) + "%");
+		ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(percentOfHits) + "%");
+		TotalHits += percentOfHits;
+		ui->CtextBrowser->append("-------------------");
 	}
 	if (numberOfAcer != 0)
 	{
