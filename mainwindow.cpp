@@ -625,8 +625,13 @@ void MainWindow::on_CpushButtonExecute_clicked()
 			/ ((double)(classifiers->BPass + classifiers->BFail) + (double)(classifiers->APass + classifiers->AFail)) * 100) + "%");
 	}
 
-	if (ui->CcomboBoxClassifiers->currentText() == "K-NM") {
-
+	if (ui->CcomboBoxClassifiers->currentText() == "KNN") {
+		classifiers->kNNClasiffier(featuresForClassification, ui->CcomboBoxK->currentText().toInt());
+		ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
+		ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
+		ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->percentOfHitsAcer) + "%");
+		ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->percentOfHitsQuercus) + "%");
+		ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(percentOfHits) + "%");
 	}
 	if (numberOfAcer != 0)
 	{

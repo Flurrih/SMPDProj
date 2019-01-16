@@ -2,6 +2,7 @@
 
 
 
+
 Classifiers::Classifiers(Database *main)
 {
 	this->main = main;
@@ -122,6 +123,114 @@ void Classifiers::NNClasiffier(std::vector<int> cechyDoKlasyf)
 
 			}
 		}
+	}
+
+	if (numberOfAcer != 0)
+	{
+		percentOfHitsAcer = (numberOfHitsAcer * 100 / numberOfAcer);
+	}
+	else {
+		percentOfHitsAcer = 0;
+	}
+	if (numberOfQuercus != 0) {
+		percentOfHitsQuercus = (numberOfHitsQuercus * 100 / numberOfQuercus);
+	}
+	else {
+		percentOfHitsQuercus = 0;
+	}
+
+}
+
+bool sortbysec(const std::pair<int, double> &a,
+	const std::pair<int, double> &b)
+{
+	return (a.second < b.second);
+}
+
+void Classifiers::kNNClasiffier(std::vector<int> cechyDoKlasyf, int k)
+{
+	int idNearestNeighbor = 0;
+	numberOfAcer = 0;
+	numberOfHitsAcer = 0;
+	numberOfHitsQuercus = 0;
+	numberOfQuercus = 0;
+	percentOfHitsAcer = 0;
+	percentOfHitsQuercus = 0;
+	
+
+
+	for (int i = 0; i < testObjects.size(); i++) {
+		double minDistance = 99999;
+		std::vector<std::pair<int, double>> allDist;
+		std::vector<int> kBest;
+		for (int j = 0; j < trainObjects.size(); j++) {
+			double distance = 0;
+
+			for (int k = 0; k < cechyDoKlasyf.size(); k++) {
+				distance += pow(trainObjects[j].getFeatures()[cechyDoKlasyf[k]] - testObjects[i].getFeatures()[cechyDoKlasyf[k]], 2);
+			}
+
+			distance = sqrt(distance);
+			allDist.push_back(std::make_pair(j, distance));
+
+			if (distance < minDistance) {
+
+				minDistance = distance;
+				idNearestNeighbor = j;
+			}
+		}
+
+		std::sort(allDist.begin(), allDist.end(), sortbysec);
+
+		for (int kn = 0; kn < k; kn++)
+		{
+			kBest.push_back(allDist[kn].first);
+		}
+		int ACount = 0;
+		int BCount = 0;
+
+		for (int bestObj = 0; bestObj < kBest.size(); bestObj++)
+		{
+			if (trainObjects[kBest[bestObj]].getClassName() == classNames[0]) // A
+			{
+				ACount++;
+			}
+			else if (trainObjects[kBest[bestObj]].getClassName() == classNames[1]) // B
+			{
+				BCount++;
+			}
+		}
+
+		if (ACount > BCount)//Klasyfikacja do A
+		{
+			numberOfAcer++;
+			if (testObjects[i].getClassName() == classNames[0])
+			{
+				numberOfHitsAcer++;
+			}
+		}
+		else if (BCount > ACount)//Klasyfikacja do B
+		{
+			numberOfQuercus++;
+			if (testObjects[i].getClassName() == classNames[1])
+			{
+				numberOfHitsQuercus++;
+			}
+		}
+
+		//if (testObjects[i].getClassName().compare("Acer") == 0) {
+		//	numberOfAcer++;
+		//	if (trainObjects[idNearestNeighbor].getClassName().compare("Acer") == 0) {
+		//		numberOfHitsAcer++;
+		//	}
+		//}
+		//else if (testObjects[i].getClassName().compare("Quercus") == 0) {
+		//	numberOfQuercus++;
+		//	if (trainObjects[idNearestNeighbor].getClassName().compare("Quercus") == 0) {
+		//		numberOfHitsQuercus++;
+
+		//	}
+		//}
 	}
 
 	if (numberOfAcer != 0)
