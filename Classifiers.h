@@ -14,8 +14,11 @@ public:
 	~Classifiers();
 	std::vector<std::string> classNames;
 	void NMClasiffier(std::vector<int> cechydoklasyfikacji);
+	void NMClasiffier(std::vector<int> cechyDoKlasyf, std::vector<Object> trainObjects, std::vector<Object> testObjects);
 	void NNClasiffier(std::vector<int> cechydoklasyfikacji);
+	void NNClasiffier(std::vector<int> cechyDoKlasyf, std::vector<Object> trainObjects, std::vector<Object> testObjects);
 	void kNNClasiffier(std::vector<int> cechydoklasyfikacji, int k);
+	void kNNClasiffier(std::vector<int> cechydoklasyfikacji, int k, std::vector<Object> trainObjects, std::vector<Object> testObjects);
 	std::vector<Object> testObjects;
 	std::vector<Object> trainObjects;
 	void divideObjectsAsTrainAndTest(double trainPercent);

@@ -55,6 +55,8 @@ private slots:
     void on_CpushButtonExecute_clicked();
 
 	void on_CpushButtonBoostrap_clicked();
+		
+	void on_CpushButtonBoostrapR_clicked();
 
 	public:
     Ui::MainWindow *ui;
@@ -62,6 +64,8 @@ private slots:
 
 	SMPHelper* SMPDHelper;
 	Database database;
+	std::vector<std::vector<Object>> bootstrapTrainObjectVectors;
+	std::vector<std::vector<Object>> bootstrapTestObjectVectors;
 private:
      
 };

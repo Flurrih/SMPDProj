@@ -14,6 +14,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <cstdio>
+#include <ctime>
 
 typedef boost::numeric::ublas::matrix<long double> doubleMatrix;
 namespace bnu = boost::numeric::ublas;
@@ -40,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->setupUi(this);
 	FSupdateButtonState();
-	
+	time_t now = time(0);
 }
 
 MainWindow::~MainWindow()
@@ -353,6 +354,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 				featuresForClassification.push_back(max_ind);
 			}
 		}
+		maxFLD = FLD;
 		FLD = 0;
 		bestSfs.push_back(max_ind);
 
@@ -534,43 +536,140 @@ void MainWindow::on_CpushButtonTrain_clicked()
 	int procToTrainingBase = ui->CplainTextEditTrainingPart->toPlainText().toInt();
 	classifiers->divideObjectsAsTrainAndTest(procToTrainingBase);
 	
-
+	ui->CtextBrowser->append("Trening zakonczony");
 	
 }
 
 void MainWindow::on_CpushButtonBoostrap_clicked()
 {
+	std::vector<Object> tmp0;
+	std::vector<Object> tmp1;
+	std::vector<Object> tmp2;
+	bootstrapTestObjectVectors.push_back(tmp0);
+	bootstrapTestObjectVectors.push_back(tmp1);
+	bootstrapTestObjectVectors.push_back(tmp2);
+
+	std::vector<Object> tmp00;
+	std::vector<Object> tmp11;
+	std::vector<Object> tmp22;
+	bootstrapTrainObjectVectors.push_back(tmp00);
+	bootstrapTrainObjectVectors.push_back(tmp11);
+	bootstrapTrainObjectVectors.push_back(tmp22);
 	TotalHits = 0;
 	for (int i = 0; i < ui->ComboBoxBoostrapK->currentText().toInt(); i++)
 	{
 		int randomNumber = 0;
 		std::vector<int> randomNumbers;
 		bool notRepeated = true;
-		classifiers->testObjects.clear();
-		classifiers-> trainObjects.clear();
-
-		for (int j = 0; j < database.getNoObjects(); j++)
+		//classifiers->testObjects.clear();
+		//classifiers-> trainObjects.clear();
+		if (bootstrapTestObjectVectors[i].size() <= 0)
 		{
-			randomNumber = (rand() % (int)(database.getNoObjects()));
-			classifiers->trainObjects.push_back(database.getObjects()[randomNumber]);
-			randomNumbers.push_back(randomNumber);
-		}
-
-		for (int k = 0; k < database.getNoObjects(); k++)
-		{
-			notRepeated = true;
-			for (int j = 0; j < randomNumbers.size(); j++)
+			for (int j = 0; j < database.getNoObjects(); j++)
 			{
-				if (randomNumbers[j] == k)
+				randomNumber = (rand() % (int)(database.getNoObjects()));
+				//classifiers->trainObjects.push_back(database.getObjects()[randomNumber]);
+				bootstrapTrainObjectVectors[i].push_back(database.getObjects()[randomNumber]);
+				randomNumbers.push_back(randomNumber);
+			}
+
+			for (int k = 0; k < database.getNoObjects(); k++)
+			{
+				notRepeated = true;
+				for (int j = 0; j < randomNumbers.size(); j++)
 				{
-					notRepeated = false;
+					if (randomNumbers[j] == k)
+					{
+						notRepeated = false;
+					}
+				}
+				if (notRepeated) {
+					//classifiers->testObjects.push_back(database.getObjects()[k]);
+					bootstrapTestObjectVectors[i].push_back(database.getObjects()[k]);
 				}
 			}
-			if (notRepeated) {
-				classifiers->testObjects.push_back(database.getObjects()[k]);
-			}
 		}
-		on_CpushButtonExecute_clicked();
+
+		//on_CpushButtonExecute_clicked();
+
+		int numberOfAcer = 0;
+		int numberOfHitsAcer = 0;
+		float percentOfHitsAcer = 0;
+
+		int numberOfQuercus = 0;
+		int numberOfHitsQuercus = 0;
+		float percentOfHitsQuercus = 0;
+
+		float percentOfHits = 0;
+		double distance = 0;
+		double minDistance = 99999;
+		int idNearestNeighbor = -1;
+
+		if (ui->CcomboBoxClassifiers->currentText() == "NN")
+		{
+
+			ui->CtextBrowser->append("-------------------");
+			ui->CtextBrowser->append("Klasyfikator NN");
+
+			classifiers->NNClasiffier(featuresForClassification, bootstrapTrainObjectVectors[i], bootstrapTestObjectVectors[i]);
+
+			percentOfHits = ((classifiers->numberOfHitsAcer + classifiers->numberOfHitsQuercus) * 100) / (classifiers->numberOfAcer + classifiers->numberOfQuercus);
+			//ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
+			//ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
+			ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->percentOfHitsAcer) + "%");
+			ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->percentOfHitsQuercus) + "%");
+			ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(percentOfHits) + "%");
+			TotalHits += percentOfHits;
+			ui->CtextBrowser->append("-------------------");
+		}
+
+
+
+		if (ui->CcomboBoxClassifiers->currentText() == "NM") {
+			ui->CtextBrowser->append("-------------------");
+			ui->CtextBrowser->append("NM");
+
+			classifiers->NMClasiffier(featuresForClassification, bootstrapTrainObjectVectors[i], bootstrapTestObjectVectors[i]);
+
+			percentOfHits = ((classifiers->numberOfHitsAcer + classifiers->numberOfHitsQuercus) * 100) / (classifiers->numberOfAcer + classifiers->numberOfQuercus);
+			//ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
+			//ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
+			ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->percentOfHitsAcer) + "%");
+			ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->percentOfHitsQuercus) + "%");
+			ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(percentOfHits) + "%");
+			TotalHits += percentOfHits;
+			ui->CtextBrowser->append("-------------------");
+		}
+
+		if (ui->CcomboBoxClassifiers->currentText() == "KNN") {
+			ui->CtextBrowser->append("-------------------");
+			ui->CtextBrowser->append("Klasyfikator kNN");
+
+			classifiers->kNNClasiffier(featuresForClassification, ui->CcomboBoxK->currentText().toInt(), bootstrapTrainObjectVectors[i], bootstrapTestObjectVectors[i]);
+
+			percentOfHits = ((classifiers->numberOfHitsAcer + classifiers->numberOfHitsQuercus) * 100) / (classifiers->numberOfAcer + classifiers->numberOfQuercus);
+			//ui->CtextBrowser->append("liczba Acer:" + QString::number(classifiers->numberOfAcer) + "   liczba trafien dla Acer:" + QString::number(classifiers->numberOfHitsAcer));
+			//ui->CtextBrowser->append("liczba Quercus:" + QString::number(classifiers->numberOfQuercus) + "   liczba trafien dla Quercus:" + QString::number(classifiers->numberOfHitsQuercus));
+			ui->CtextBrowser->append("Procent tafien dla Acer: " + QString::number(classifiers->percentOfHitsAcer) + "%");
+			ui->CtextBrowser->append("Procent tafien dla Quercus: " + QString::number(classifiers->percentOfHitsQuercus) + "%");
+			ui->CtextBrowser->append("Procent poprawnie zakfalifikowanych probek: " + QString::number(percentOfHits) + "%");
+			TotalHits += percentOfHits;
+			ui->CtextBrowser->append("-------------------");
+		}
+		if (numberOfAcer != 0)
+		{
+			percentOfHitsAcer = (numberOfHitsAcer * 100 / numberOfAcer);
+		}
+		else {
+			percentOfHitsAcer = 0;
+		}
+		if (numberOfQuercus != 0) {
+			percentOfHitsQuercus = (numberOfHitsQuercus * 100 / numberOfQuercus);
+		}
+		else {
+			percentOfHitsQuercus = 0;
+		}
+
 	}
 	//featuresForClassification.clear();
 	ui->CtextBrowser->append(" ++++++++++++++++++++ ");
@@ -578,6 +677,28 @@ void MainWindow::on_CpushButtonBoostrap_clicked()
 	ui->CtextBrowser->append("dla klasyfikatora " + ui->CcomboBoxClassifiers->currentText());
 	ui->CtextBrowser->append(QString::number(TotalHits / ui->ComboBoxBoostrapK->currentText().toUInt()) + "%");
 
+}
+
+void MainWindow::on_CpushButtonBoostrapR_clicked()
+{
+	bootstrapTestObjectVectors.clear();
+	bootstrapTrainObjectVectors.clear();
+
+	std::vector<Object> tmp0;
+	std::vector<Object> tmp1;
+	std::vector<Object> tmp2;
+	bootstrapTestObjectVectors.push_back(tmp0);
+	bootstrapTestObjectVectors.push_back(tmp1);
+	bootstrapTestObjectVectors.push_back(tmp2);
+
+	std::vector<Object> tmp00;
+	std::vector<Object> tmp11;
+	std::vector<Object> tmp22;
+	bootstrapTrainObjectVectors.push_back(tmp00);
+	bootstrapTrainObjectVectors.push_back(tmp11);
+	bootstrapTrainObjectVectors.push_back(tmp22);
+
+	ui->CtextBrowser->append(" RESET ");
 }
 
 void MainWindow::on_CpushButtonExecute_clicked()
