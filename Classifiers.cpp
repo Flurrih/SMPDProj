@@ -92,7 +92,7 @@ void Classifiers::NNClasiffier(std::vector<int> cechyDoKlasyf)
 
 
 	for (int i = 0; i < testObjects.size(); i++) {
-		double minDistance = 99999;
+		double minDistance = INT32_MAX;
 
 		for (int j = 0; j < trainObjects.size(); j++) {
 			double distance = 0;
@@ -323,11 +323,11 @@ void Classifiers::kNNClasiffier(std::vector<int> cechyDoKlasyf, int k, std::vect
 			distance = sqrt(distance);
 			allDist.push_back(std::make_pair(j, distance));
 
-			if (distance < minDistance) {
+			/*if (distance < minDistance) {
 
 				minDistance = distance;
 				idNearestNeighbor = j;
-			}
+			}*/
 		}
 
 		std::sort(allDist.begin(), allDist.end(), sortbysec);

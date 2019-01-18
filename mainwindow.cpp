@@ -185,7 +185,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 			for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
 				objectCount[database.getObjects()[i].getClassName()] ++;
 
-			//Stworz liste resdnich dla A i B
+			//Stworz liste srednich dla A i B
 			for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
 			{
 				for (int xx = 0; xx < database.getNoFeatures(); xx++)
@@ -359,9 +359,9 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 		bestSfs.push_back(max_ind);
 
 		for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
-			objectCount[database.getObjects()[i].getClassName()] ++;
+			objectCount[database.getObjects()[i].getClassName()] ++; //liczymy iloœæ obiektów
 
-		//Stworz liste resdnich dla A i B
+		//Stworz liste srednich dla A i B
 		for (int i = 0; i < database.getObjects().size(); i++)//auto const &ob : database.getObjects()
 		{
 			for (int xx = 0; xx < database.getNoFeatures(); xx++)
@@ -376,7 +376,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 			for (int c = 0; c < database.getNoFeatures(); c++)
 			{
 				tmpComb = bestSfs;
-				if (!containsValue(tmpComb, c))
+				if (!containsValue(tmpComb, c)) //sprawdzamy czy cechy siê nie powtarzaj¹
 					tmpComb.push_back(c);
 				else
 					continue;
